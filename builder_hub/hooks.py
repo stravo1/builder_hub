@@ -166,6 +166,9 @@ after_migrate = "builder_hub.install.after_migrate"
 # 		"builder_hub.tasks.monthly"
 # 	],
 # }
+scheduler_events = {
+	"hourly": ["builder_hub.extensions.tasks.check_releases"],
+}
 
 # Testing
 # -------
@@ -208,6 +211,19 @@ after_migrate = "builder_hub.install.after_migrate"
 # before_request = ["builder_hub.utils.before_request"]
 # after_request = ["builder_hub.utils.after_request"]
 after_request = ["builder_hub.api.allow_template_embedding"]
+after_request.append("builder_hub.extensions.responses.set_extension_icon_cache_headers")
+
+permission_query_conditions = {
+	"Builder Hub Publisher": "builder_hub.extensions.permissions.publisher_query",
+	"Builder Hub Extension": "builder_hub.extensions.permissions.extension_query",
+	"Builder Hub Extension Release": "builder_hub.extensions.permissions.release_query",
+}
+
+has_permission = {
+	"Builder Hub Publisher": "builder_hub.extensions.permissions.publisher_permission",
+	"Builder Hub Extension": "builder_hub.extensions.permissions.extension_permission",
+	"Builder Hub Extension Release": "builder_hub.extensions.permissions.release_permission",
+}
 
 # Job Events
 # ----------
@@ -259,4 +275,3 @@ require_type_annotated_api_methods = True
 # ------------
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
-

@@ -1,0 +1,25 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": ["target_doctype", "target_name", "previous_status", "status", "reason", "changed_by", "changed_on"],
+ "fields": [
+  {"fieldname": "target_doctype", "fieldtype": "Select", "in_list_view": 1, "label": "Target Type", "options": "Builder Hub Publisher\nBuilder Hub Extension\nBuilder Hub Extension Release", "reqd": 1},
+  {"fieldname": "target_name", "fieldtype": "Data", "in_list_view": 1, "label": "Target", "reqd": 1},
+  {"fieldname": "previous_status", "fieldtype": "Data", "label": "Previous Status"},
+  {"fieldname": "status", "fieldtype": "Data", "in_list_view": 1, "label": "Status", "reqd": 1},
+  {"fieldname": "reason", "fieldtype": "Small Text", "label": "Reason"},
+  {"fieldname": "changed_by", "fieldtype": "Link", "label": "Changed By", "options": "User", "read_only": 1},
+  {"fieldname": "changed_on", "fieldtype": "Datetime", "label": "Changed On", "read_only": 1}
+ ],
+ "module": "Builder Hub",
+ "name": "Builder Hub Extension Audit",
+ "permissions": [
+  {"read": 1, "role": "System Manager"},
+  {"read": 1, "role": "Builder Hub Maintainer"},
+  {"read": 1, "role": "Builder Hub Publisher"}
+ ],
+ "sort_field": "changed_on",
+ "sort_order": "DESC"
+}
