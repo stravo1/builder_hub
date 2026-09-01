@@ -1,0 +1,48 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "extension",
+  "version",
+  "protocol_version",
+  "manifest",
+  "github_release_id",
+  "github_release_url",
+  "github_asset_id",
+  "package_url",
+  "package_sha256",
+  "package_size",
+  "release_notes",
+  "validation_errors",
+  "published_on",
+  "status"
+ ],
+ "fields": [
+  {"fieldname": "extension", "fieldtype": "Link", "in_list_view": 1, "label": "Extension", "options": "Builder Hub Extension", "reqd": 1},
+  {"fieldname": "version", "fieldtype": "Data", "in_list_view": 1, "label": "Version", "reqd": 1},
+  {"fieldname": "protocol_version", "fieldtype": "Int", "label": "Protocol Version", "reqd": 1},
+  {"fieldname": "manifest", "fieldtype": "JSON", "label": "Manifest"},
+  {"fieldname": "github_release_id", "fieldtype": "Data", "label": "GitHub Release ID"},
+  {"fieldname": "github_release_url", "fieldtype": "Data", "label": "GitHub Release URL", "options": "URL"},
+  {"fieldname": "github_asset_id", "fieldtype": "Data", "label": "GitHub Asset ID"},
+  {"fieldname": "package_url", "fieldtype": "Data", "label": "Package URL", "options": "URL"},
+  {"fieldname": "package_sha256", "fieldtype": "Data", "label": "Package SHA-256"},
+  {"fieldname": "package_size", "fieldtype": "Int", "label": "Package Size"},
+  {"fieldname": "release_notes", "fieldtype": "Markdown Editor", "label": "Release Notes"},
+  {"fieldname": "validation_errors", "fieldtype": "JSON", "label": "Validation Errors", "read_only": 1},
+  {"fieldname": "published_on", "fieldtype": "Datetime", "label": "Published On", "read_only": 1},
+  {"default": "Validating", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Validating\nPending Review\nPublished\nRejected\nYanked\nBlocked", "reqd": 1}
+ ],
+ "module": "Builder Hub",
+ "name": "Builder Hub Extension Release",
+ "permissions": [
+  {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},
+  {"create": 1, "delete": 1, "read": 1, "role": "Builder Hub Maintainer", "write": 1},
+  {"read": 1, "role": "Builder Hub Publisher"}
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

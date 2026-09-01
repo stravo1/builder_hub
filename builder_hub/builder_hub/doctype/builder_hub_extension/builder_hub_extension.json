@@ -1,0 +1,50 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:extension_name",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "extension_name",
+  "publisher",
+  "label",
+  "description",
+  "readme",
+  "repository_url",
+  "github_repository_id",
+  "license",
+  "categories",
+  "icon",
+  "replacement",
+  "last_checked_on",
+  "github_etag",
+  "status"
+ ],
+ "fields": [
+  {"fieldname": "extension_name", "fieldtype": "Data", "in_list_view": 1, "label": "Extension Name", "reqd": 1, "unique": 1},
+  {"fieldname": "publisher", "fieldtype": "Link", "in_list_view": 1, "label": "Publisher", "options": "Builder Hub Publisher", "reqd": 1},
+  {"fieldname": "label", "fieldtype": "Data", "label": "Label", "reqd": 1},
+  {"fieldname": "description", "fieldtype": "Small Text", "label": "Description", "reqd": 1},
+  {"fieldname": "readme", "fieldtype": "Markdown Editor", "label": "README"},
+  {"fieldname": "repository_url", "fieldtype": "Data", "label": "Repository URL", "options": "URL", "reqd": 1},
+  {"fieldname": "github_repository_id", "fieldtype": "Data", "label": "GitHub Repository ID", "reqd": 1, "unique": 1},
+  {"fieldname": "license", "fieldtype": "Data", "label": "SPDX License", "reqd": 1},
+  {"fieldname": "categories", "fieldtype": "JSON", "label": "Categories"},
+  {"fieldname": "icon", "fieldtype": "Attach Image", "label": "Icon", "read_only": 1},
+  {"fieldname": "replacement", "fieldtype": "Link", "label": "Replacement", "options": "Builder Hub Extension"},
+  {"fieldname": "last_checked_on", "fieldtype": "Datetime", "label": "Last Checked On", "read_only": 1},
+  {"fieldname": "github_etag", "fieldtype": "Data", "label": "GitHub ETag", "read_only": 1},
+  {"default": "Draft", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Draft\nPending Review\nPublished\nDeprecated\nRemoved\nBlocked", "reqd": 1}
+ ],
+ "module": "Builder Hub",
+ "name": "Builder Hub Extension",
+ "naming_rule": "By fieldname",
+ "permissions": [
+  {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},
+  {"create": 1, "delete": 1, "read": 1, "role": "Builder Hub Maintainer", "write": 1},
+  {"create": 1, "read": 1, "role": "Builder Hub Publisher", "write": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}

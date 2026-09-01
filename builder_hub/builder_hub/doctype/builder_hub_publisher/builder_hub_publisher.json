@@ -1,0 +1,39 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "autoname": "field:publisher_id",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "publisher_id",
+  "display_name",
+  "owner_user",
+  "github_owner",
+  "github_account_id",
+  "website",
+  "verified",
+  "status"
+ ],
+ "fields": [
+  {"fieldname": "publisher_id", "fieldtype": "Data", "in_list_view": 1, "label": "Publisher ID", "reqd": 1, "unique": 1},
+  {"fieldname": "display_name", "fieldtype": "Data", "in_list_view": 1, "label": "Display Name", "reqd": 1},
+  {"fieldname": "owner_user", "fieldtype": "Link", "label": "Owner User", "options": "User", "reqd": 1},
+  {"fieldname": "github_owner", "fieldtype": "Data", "label": "GitHub Owner", "reqd": 1},
+  {"fieldname": "github_account_id", "fieldtype": "Data", "label": "GitHub Account ID", "reqd": 1},
+  {"fieldname": "website", "fieldtype": "Data", "label": "Website", "options": "URL"},
+  {"default": "0", "fieldname": "verified", "fieldtype": "Check", "label": "Verified"},
+  {"default": "Pending", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Pending\nActive\nBlocked", "reqd": 1}
+ ],
+ "index_web_pages_for_search": 0,
+ "module": "Builder Hub",
+ "name": "Builder Hub Publisher",
+ "naming_rule": "By fieldname",
+ "permissions": [
+  {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},
+  {"create": 1, "delete": 1, "read": 1, "role": "Builder Hub Maintainer", "write": 1},
+  {"read": 1, "role": "Builder Hub Publisher", "write": 1}
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1
+}
