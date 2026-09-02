@@ -213,18 +213,6 @@ scheduler_events = {
 after_request = ["builder_hub.api.allow_template_embedding"]
 after_request.append("builder_hub.extensions.responses.set_extension_icon_cache_headers")
 
-permission_query_conditions = {
-	"Builder Hub Publisher": "builder_hub.extensions.permissions.publisher_query",
-	"Builder Hub Extension": "builder_hub.extensions.permissions.extension_query",
-	"Builder Hub Extension Release": "builder_hub.extensions.permissions.release_query",
-}
-
-has_permission = {
-	"Builder Hub Publisher": "builder_hub.extensions.permissions.publisher_permission",
-	"Builder Hub Extension": "builder_hub.extensions.permissions.extension_permission",
-	"Builder Hub Extension Release": "builder_hub.extensions.permissions.release_permission",
-}
-
 # Job Events
 # ----------
 # before_job = ["builder_hub.utils.before_job"]

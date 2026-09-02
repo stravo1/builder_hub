@@ -69,22 +69,44 @@ def import_release(
 			contract,
 			release_data,
 		)
-		_apply_validated_release(
-			release,
-			validated_import.release_data,
-			validated_import.asset,
-			validated_import.package,
-			validated_import.contract,
-			first_release,
-		)
-		if validated_import.package.icon_content:
-			icon_url = store_catalog_icon(validated_import.package.icon_content)
-			if extension.icon != icon_url:
-				extension.db_set("icon", icon_url, update_modified=False)
-		_update_listing_from_contract(extension, validated_import.contract)
-		return release.reload()
+		return _store_validated_release(extension, release, validated_import, first_release)
 	except ProtocolValidationError as error:
 		return _record_import_failure(release, error)
+
+
+def validate_release_source(
+	client: GitHubClient,
+	repository: dict,
+	contract: dict,
+	extension_name: str,
+	version: str,
+	*,
+	release_data: dict | None = None,
+) -> ValidatedReleaseImport:
+	"""Validate one repository release without creating registry records."""
+	if version not in contract["versions"]:
+		raise ProtocolValidationError(
+			"version_not_declared", "The release version is missing from versions.json."
+		)
+	release_data = release_data or client.get_release(repository, version)
+	asset = _validate_release(release_data, extension_name, version)
+	package = _download_and_validate_package(client, asset, extension_name, version)
+	_validate_protocol_consistency(package, contract, version)
+	return ValidatedReleaseImport(release_data, asset, package, contract)
+
+
+def import_validated_release(
+	extension_name: str,
+	validated_import: ValidatedReleaseImport,
+	*,
+	first_release: bool = False,
+):
+	"""Store a release that was validated in the current request."""
+	extension = frappe.get_doc("Builder Hub Extension", extension_name)
+	release = _get_or_create_release(extension.name, validated_import.package.manifest["version"])
+	if release.status in {"Published", "Yanked", "Blocked"}:
+		return release
+	return _store_validated_release(extension, release, validated_import, first_release)
 
 
 def _reuse_immutable_release(release, release_data: dict | None):
@@ -111,16 +133,33 @@ def _validate_release_import(
 			"repository_mismatch", "GitHub returned a different repository identity."
 		)
 	contract = contract or get_repository_contract(client, repository, extension.license)
-	if version not in contract["versions"]:
-		raise ProtocolValidationError(
-			"version_not_declared", "The release version is missing from versions.json."
-		)
-	release_data = release_data or client.get_release(repository, version)
-	asset = _validate_release(release_data, extension.name, version)
-	_assert_unchanged_asset(release, release_data, asset)
-	package = _download_and_validate_package(client, asset, extension.name, version)
-	_validate_protocol_consistency(package, contract, version)
-	return ValidatedReleaseImport(release_data, asset, package, contract)
+	validated_import = validate_release_source(
+		client,
+		repository,
+		contract,
+		extension.name,
+		version,
+		release_data=release_data,
+	)
+	_assert_unchanged_asset(release, validated_import.release_data, validated_import.asset)
+	return validated_import
+
+
+def _store_validated_release(extension, release, validated_import, first_release: bool):
+	_apply_validated_release(
+		release,
+		validated_import.release_data,
+		validated_import.asset,
+		validated_import.package,
+		validated_import.contract,
+		first_release,
+	)
+	if validated_import.package.icon_content:
+		icon_url = store_catalog_icon(validated_import.package.icon_content)
+		if extension.icon != icon_url:
+			extension.db_set("icon", icon_url, update_modified=False)
+	_update_listing_from_contract(extension, validated_import.contract)
+	return release.reload()
 
 
 def _download_and_validate_package(

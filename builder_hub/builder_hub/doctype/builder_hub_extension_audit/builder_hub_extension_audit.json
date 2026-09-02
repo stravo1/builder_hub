@@ -17,8 +17,7 @@
  "name": "Builder Hub Extension Audit",
  "permissions": [
   {"read": 1, "role": "System Manager"},
-  {"read": 1, "role": "Builder Hub Maintainer"},
-  {"read": 1, "role": "Builder Hub Publisher"}
+  {"read": 1, "role": "Builder Hub Maintainer"}
  ],
  "sort_field": "changed_on",
  "sort_order": "DESC"

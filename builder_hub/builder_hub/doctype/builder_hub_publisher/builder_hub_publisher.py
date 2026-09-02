@@ -28,7 +28,7 @@ class BuilderHubPublisher(Document):
 			return
 		if before.publisher_id != self.publisher_id:
 			frappe.throw(_("Publisher IDs are permanent."))
-		protected = ("owner_user", "github_owner", "github_account_id", "verified", "status")
+		protected = ("github_owner", "github_account_id", "verified", "status")
 		if (
 			any(before.get(fieldname) != self.get(fieldname) for fieldname in protected)
 			and not _is_maintainer()

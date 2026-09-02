@@ -1,4 +1,4 @@
-"""Scheduled and author-requested GitHub release checks."""
+"""Scheduled and maintainer-requested GitHub release checks."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ from builder_hub.extensions.github import GitHubClient, get_repository_contract,
 from builder_hub.extensions.protocol import ProtocolValidationError, semver_key
 from builder_hub.extensions.publishing import import_release, is_maintainer
 
-AUTHOR_CHECK_INTERVAL = 15 * 60
+MANUAL_CHECK_INTERVAL = 15 * 60
 
 
 def check_releases() -> None:
@@ -102,16 +102,13 @@ def check_repository(extension_name: str, *, client: GitHubClient | None = None)
 
 
 def request_release_check(extension_name: str) -> dict:
-	if frappe.session.user == "Guest":
-		frappe.throw(_("Sign in to request a release check."), frappe.PermissionError)
+	if not is_maintainer():
+		frappe.throw(_("A Builder Hub maintainer must request a release check."), frappe.PermissionError)
 	extension = frappe.get_doc("Builder Hub Extension", extension_name)
-	owner = frappe.db.get_value("Builder Hub Publisher", extension.publisher, "owner_user")
-	if owner != frappe.session.user and not is_maintainer():
-		frappe.throw(_("You do not own this extension."), frappe.PermissionError)
-	key = f"builder_hub:extensions:author_check:{extension.name}"
+	key = f"builder_hub:extensions:manual_check:{extension.name}"
 	if frappe.cache.get_value(key):
 		frappe.throw(_("A release check was requested recently. Try again later."))
-	frappe.cache.set_value(key, 1, expires_in_sec=AUTHOR_CHECK_INTERVAL)
+	frappe.cache.set_value(key, 1, expires_in_sec=MANUAL_CHECK_INTERVAL)
 	enqueue_repository_check(extension.name, extension.github_repository_id)
 	return {"extension": extension.name, "queued": True}
 

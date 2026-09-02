@@ -41,8 +41,7 @@
  "naming_rule": "By fieldname",
  "permissions": [
   {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},
-  {"create": 1, "delete": 1, "read": 1, "role": "Builder Hub Maintainer", "write": 1},
-  {"create": 1, "read": 1, "role": "Builder Hub Publisher", "write": 1}
+  {"create": 1, "delete": 1, "read": 1, "role": "Builder Hub Maintainer", "write": 1}
  ],
  "sort_field": "modified",
  "sort_order": "DESC",

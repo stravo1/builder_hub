@@ -20,7 +20,6 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 				"doctype": "Builder Hub Publisher",
 				"publisher_id": self.publisher_id,
 				"display_name": "Test Publisher",
-				"owner_user": "Administrator",
 				"github_owner": self.publisher_id,
 				"github_account_id": frappe.generate_hash(length=12),
 				"verified": 1,

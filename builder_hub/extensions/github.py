@@ -281,16 +281,21 @@ def _delete_file(path: str) -> None:
 
 
 def validate_repository(repository: dict, publisher_account_id: str) -> None:
-	if repository.get("private"):
-		raise ProtocolValidationError("private_repository", "The GitHub repository must be public.")
-	if repository.get("archived") or repository.get("disabled"):
-		raise ProtocolValidationError("inactive_repository", "The GitHub repository must be active.")
+	validate_public_repository(repository)
 	owner = repository.get("owner") or {}
 	if str(owner.get("id")) != str(publisher_account_id):
 		raise ProtocolValidationError(
 			"repository_owner_mismatch",
 			"The repository owner does not match the registered publisher account.",
 		)
+
+
+def validate_public_repository(repository: dict) -> None:
+	"""Require a public, active GitHub repository with a default branch."""
+	if repository.get("private"):
+		raise ProtocolValidationError("private_repository", "The GitHub repository must be public.")
+	if repository.get("archived") or repository.get("disabled"):
+		raise ProtocolValidationError("inactive_repository", "The GitHub repository must be active.")
 	if not repository.get("default_branch"):
 		raise ProtocolValidationError("invalid_repository", "The GitHub repository has no default branch.")
 

@@ -35,7 +35,6 @@ class PublishingTests(IntegrationTestCase):
 				"doctype": "Builder Hub Publisher",
 				"publisher_id": self.publisher_id,
 				"display_name": "Import Publisher",
-				"owner_user": "Administrator",
 				"github_owner": self.publisher_id,
 				"github_account_id": self.owner_id,
 				"status": "Active",

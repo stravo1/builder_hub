@@ -7,6 +7,7 @@ from datetime import UTC
 
 import frappe
 from frappe import _
+from frappe.rate_limiter import rate_limit
 from frappe.utils import get_datetime, get_url
 from frappe.utils.caching import redis_cache
 
@@ -175,9 +176,24 @@ def get_release_status(releases: list[dict] | str) -> dict:
 	return {"schema_version": SCHEMA_VERSION, "releases": results}
 
 
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+@rate_limit(limit=5, seconds=60 * 60, methods="POST")
+def request_publication(
+	repository_url: str,
+	publisher_name: str,
+	categories: list[str] | str | None = None,
+) -> dict:
+	return submission.request_publication(repository_url, publisher_name, categories)
+
+
 @frappe.whitelist()
-def submit_repository(repository_url: str, publisher_id: str, license_id: str, categories=None) -> dict:
-	return submission.submit_repository(repository_url, publisher_id, license_id, categories)
+def approve_publication_request(request_name: str, reason: str | None = None) -> dict:
+	return submission.approve_publication_request(request_name, reason)
+
+
+@frappe.whitelist()
+def reject_publication_request(request_name: str, reason: str) -> dict:
+	return submission.reject_publication_request(request_name, reason)
 
 
 @frappe.whitelist()

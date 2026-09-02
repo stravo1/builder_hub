@@ -1,146 +1,322 @@
-"""Authenticated first-publication repository submission."""
+"""Public extension publication requests and maintainer review."""
 
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 
 import frappe
 from frappe import _
+from frappe.utils import now_datetime
 
 from builder_hub.extensions.github import (
 	GitHubClient,
 	get_repository_contract,
 	get_validated_repository_url,
 	parse_repository_url,
-	validate_repository,
+	validate_public_repository,
 )
 from builder_hub.extensions.protocol import ProtocolValidationError
-from builder_hub.extensions.publishing import import_release, is_maintainer
+from builder_hub.extensions.publishing import (
+	ValidatedReleaseImport,
+	approve_first_release,
+	import_validated_release,
+	is_maintainer,
+	validate_release_source,
+)
 
 CATEGORY = re.compile(r"^[a-z0-9][a-z0-9-]{0,49}$")
+PUBLISHER_NAME_MAX_LENGTH = 80
 
 
-def submit_repository(
+@dataclass(frozen=True)
+class ValidatedPublication:
+	repository: dict
+	publisher_id: str
+	publisher_name: str
+	license_id: str
+	categories: list[str]
+	release: ValidatedReleaseImport
+
+
+def request_publication(
 	repository_url: str,
-	publisher_id: str,
-	license_id: str,
+	publisher_name: str,
 	categories: list[str] | str | None = None,
 	*,
 	client: GitHubClient | None = None,
 ) -> dict:
-	_require_signed_in()
-	publisher = _get_submission_publisher(publisher_id)
-	client = client or GitHubClient()
-	repository = _get_submission_repository(client, repository_url, publisher)
-	contract = get_repository_contract(client, repository, license_id)
-	manifest = contract["manifest"]
-	_validate_new_listing(manifest, publisher_id, repository)
-	extension = _create_listing(
-		publisher_id, license_id, _validate_categories(categories), repository, contract
-	)
-	release = import_release(
-		extension.name,
-		manifest["version"],
-		first_release=True,
-		client=client,
-		repository=repository,
-		contract=contract,
-	)
-	if release.status == "Pending Review":
-		extension.db_set("status", "Pending Review")
+	"""Validate a public repository and create one maintainer review request."""
+	try:
+		publication = validate_publication(
+			repository_url,
+			publisher_name,
+			_validate_categories(categories),
+			client=client,
+		)
+		_assert_identity_available(publication)
+	except ProtocolValidationError as error:
+		frappe.throw(_(error.message))
+
+	request = _create_request(publication)
 	return {
-		"extension": extension.name,
-		"release": release.name,
-		"status": release.status,
-		"validation_errors": _parse_json(release.validation_errors, []),
+		"request": request.name,
+		"extension_name": request.extension_name,
+		"status": request.status,
 	}
 
 
-def _create_listing(
-	publisher_id: str,
-	license_id: str,
+def validate_publication(
+	repository_url: str,
+	publisher_name: str,
 	categories: list[str],
-	repository: dict,
-	contract: dict,
-):
+	*,
+	client: GitHubClient | None = None,
+) -> ValidatedPublication:
+	client = client or GitHubClient()
+	owner_name, repository_name = parse_repository_url(repository_url)
+	repository = client.get_repository_by_name(owner_name, repository_name)
+	owner = repository.get("owner") or {}
+	owner_id = str(owner.get("id") or "")
+	owner_login = owner.get("login") or ""
+	if not owner_id or not owner_login:
+		raise ProtocolValidationError("invalid_repository", "GitHub returned an invalid repository owner.")
+	validate_public_repository(repository)
+
+	license_id = _repository_license(repository)
+	contract = get_repository_contract(client, repository, license_id)
 	manifest = contract["manifest"]
+	publisher_id = manifest["name"].split("/", 1)[0]
+	_validate_publisher_name(publisher_name)
+	_validate_publisher_identity(publisher_id, owner_id, owner_login)
+	release = validate_release_source(
+		client,
+		repository,
+		contract,
+		manifest["name"],
+		manifest["version"],
+	)
+	return ValidatedPublication(
+		repository=repository,
+		publisher_id=publisher_id,
+		publisher_name=publisher_name.strip(),
+		license_id=license_id,
+		categories=categories,
+		release=release,
+	)
+
+
+def approve_publication_request(
+	request_name: str,
+	reason: str | None = None,
+	*,
+	client: GitHubClient | None = None,
+) -> dict:
+	_require_maintainer()
+	request = frappe.get_doc("Builder Hub Publication Request", request_name)
+	if request.status != "Pending Review":
+		frappe.throw(_("Only a pending publication request can be approved."))
+	try:
+		publication = validate_publication(
+			request.repository_url,
+			request.publisher_name,
+			_validate_categories(request.categories),
+			client=client,
+		)
+		_assert_request_unchanged(request, publication)
+	except ProtocolValidationError as error:
+		frappe.throw(_(error.message))
+
+	_create_or_update_publisher(publication)
+	extension = _create_listing(publication)
+	release = import_validated_release(extension.name, publication.release, first_release=True)
+	if release.status != "Pending Review":
+		frappe.throw(_("The first release could not be prepared for review."))
+	result = approve_first_release(release.name, reason or "Publication request approved.")
+	request.status = "Approved"
+	request.review_reason = reason
+	request.reviewed_by = frappe.session.user
+	request.reviewed_on = now_datetime()
+	request.published_extension = extension.name
+	request.published_release = release.name
+	request.save(ignore_permissions=True)
+	return {"request": request.name, **result}
+
+
+def reject_publication_request(request_name: str, reason: str) -> dict:
+	_require_maintainer()
+	if not reason or not reason.strip():
+		frappe.throw(_("A rejection reason is required."))
+	request = frappe.get_doc("Builder Hub Publication Request", request_name)
+	if request.status != "Pending Review":
+		frappe.throw(_("Only a pending publication request can be rejected."))
+	request.status = "Rejected"
+	request.review_reason = reason.strip()
+	request.reviewed_by = frappe.session.user
+	request.reviewed_on = now_datetime()
+	request.save(ignore_permissions=True)
+	return {"request": request.name, "status": request.status}
+
+
+def _create_request(publication: ValidatedPublication):
+	release = publication.release
+	package = release.package
 	return frappe.get_doc(
 		{
-			"doctype": "Builder Hub Extension",
-			"extension_name": manifest["name"],
-			"publisher": publisher_id,
-			"label": manifest["label"],
-			"description": manifest["description"],
-			"readme": contract["readme"],
-			"repository_url": get_validated_repository_url(repository),
-			"github_repository_id": str(repository["id"]),
-			"license": license_id,
-			"categories": frappe.as_json(categories),
-			"status": "Draft",
+			"doctype": "Builder Hub Publication Request",
+			"repository_url": get_validated_repository_url(publication.repository),
+			"extension_name": package.manifest["name"],
+			"publisher_id": publication.publisher_id,
+			"publisher_name": publication.publisher_name,
+			"github_owner": publication.repository["owner"]["login"],
+			"github_account_id": str(publication.repository["owner"]["id"]),
+			"github_repository_id": str(publication.repository["id"]),
+			"license": publication.license_id,
+			"categories": frappe.as_json(publication.categories),
+			"version": package.manifest["version"],
+			"manifest": frappe.as_json(package.manifest),
+			"readme": release.contract["readme"],
+			"github_release_url": release.release_data["html_url"],
+			"github_release_id": str(release.release_data["id"]),
+			"github_asset_id": str(release.asset["id"]),
+			"package_url": release.asset["browser_download_url"],
+			"package_size": package.package_size,
+			"package_sha256": package.package_sha256,
+			"release_notes": release.release_data.get("body") or "",
+			"status": "Pending Review",
 		}
 	).insert(ignore_permissions=True)
 
 
-def _get_submission_publisher(publisher_id: str):
-	publisher = frappe.get_doc("Builder Hub Publisher", publisher_id)
-	if publisher.owner_user != frappe.session.user and not is_maintainer():
-		frappe.throw(_("You do not own this publisher."), frappe.PermissionError)
-	if publisher.status != "Active":
-		frappe.throw(_("The publisher must be active before submitting an extension."))
-	return publisher
+def _create_or_update_publisher(publication: ValidatedPublication):
+	owner = publication.repository["owner"]
+	if frappe.db.exists("Builder Hub Publisher", publication.publisher_id):
+		publisher = frappe.get_doc("Builder Hub Publisher", publication.publisher_id)
+		publisher.github_owner = owner["login"]
+		publisher.verified = 1
+		publisher.status = "Active"
+		publisher.save(ignore_permissions=True)
+		return publisher
+	return frappe.get_doc(
+		{
+			"doctype": "Builder Hub Publisher",
+			"publisher_id": publication.publisher_id,
+			"display_name": publication.publisher_name,
+			"github_owner": owner["login"],
+			"github_account_id": str(owner["id"]),
+			"verified": 1,
+			"status": "Active",
+		}
+	).insert(ignore_permissions=True)
 
 
-def _get_submission_repository(client: GitHubClient, url: str, publisher):
-	try:
-		owner, repository_name = parse_repository_url(url)
-	except ProtocolValidationError as error:
-		frappe.throw(_(error.message))
-	repository = client.get_repository_by_name(owner, repository_name)
-	validate_repository(repository, publisher.github_account_id)
-	if repository.get("owner", {}).get("login", "").lower() != (publisher.github_owner or "").lower():
-		frappe.throw(_("The repository owner does not match the publisher GitHub login."))
-	_verify_connected_github_account(client, repository)
-	return repository
+def _create_listing(publication: ValidatedPublication):
+	manifest = publication.release.package.manifest
+	return frappe.get_doc(
+		{
+			"doctype": "Builder Hub Extension",
+			"extension_name": manifest["name"],
+			"publisher": publication.publisher_id,
+			"label": manifest["label"],
+			"description": manifest["description"],
+			"readme": publication.release.contract["readme"],
+			"repository_url": get_validated_repository_url(publication.repository),
+			"github_repository_id": str(publication.repository["id"]),
+			"license": publication.license_id,
+			"categories": frappe.as_json(publication.categories),
+			"status": "Pending Review",
+		}
+	).insert(ignore_permissions=True)
 
 
-def _validate_new_listing(manifest: dict, publisher_id: str, repository: dict) -> None:
-	if manifest["name"].split("/", 1)[0] != publisher_id:
-		frappe.throw(_("The root manifest does not use the selected publisher namespace."))
-	if frappe.db.exists("Builder Hub Extension", manifest["name"]):
-		frappe.throw(_("This extension name has already been used."))
-	if frappe.db.exists("Builder Hub Extension", {"github_repository_id": str(repository["id"])}):
-		frappe.throw(_("This GitHub repository has already been submitted."))
+def _assert_identity_available(
+	publication: ValidatedPublication,
+	request_name: str | None = None,
+) -> None:
+	extension_name = publication.release.package.manifest["name"]
+	repository_id = str(publication.repository["id"])
+	if frappe.db.exists("Builder Hub Extension", extension_name):
+		raise ProtocolValidationError("extension_exists", "This extension name has already been used.")
+	if frappe.db.exists("Builder Hub Extension", {"github_repository_id": repository_id}):
+		raise ProtocolValidationError(
+			"repository_exists", "This GitHub repository has already been published."
+		)
+	for filters, message in (
+		({"extension_name": extension_name}, "A publication request already uses this extension name."),
+		({"github_repository_id": repository_id}, "This GitHub repository was already submitted."),
+	):
+		existing = frappe.db.get_value("Builder Hub Publication Request", filters, "name")
+		if existing and existing != request_name:
+			raise ProtocolValidationError("request_exists", message)
 
 
-def _verify_connected_github_account(client: GitHubClient, repository: dict) -> None:
-	account = frappe.db.get_value(
-		"User Social Login",
-		{"parent": frappe.session.user, "parenttype": "User", "provider": "github"},
-		["userid", "username"],
-		as_dict=True,
-	)
-	if not account:
-		frappe.throw(_("Connect your GitHub account before submitting an extension."))
-	owner = repository.get("owner") or {}
-	if owner.get("type") != "Organization":
-		if str(owner.get("id")) != str(account.userid):
-			frappe.throw(_("The connected GitHub account does not own this repository."))
+def _assert_request_unchanged(request, publication: ValidatedPublication) -> None:
+	_assert_identity_available(publication, request.name)
+	release = publication.release
+	values = {
+		"extension_name": release.package.manifest["name"],
+		"publisher_id": publication.publisher_id,
+		"github_account_id": str(publication.repository["owner"]["id"]),
+		"github_repository_id": str(publication.repository["id"]),
+		"license": publication.license_id,
+		"version": release.package.manifest["version"],
+		"github_release_id": str(release.release_data["id"]),
+		"github_asset_id": str(release.asset["id"]),
+		"package_sha256": release.package.package_sha256,
+	}
+	if any(request.get(fieldname) != value for fieldname, value in values.items()):
+		raise ProtocolValidationError(
+			"publication_changed",
+			"The repository or release changed after submission. Submit a new request.",
+		)
+
+
+def _validate_publisher_identity(publisher_id: str, owner_id: str, owner_login: str) -> None:
+	if not frappe.db.exists("Builder Hub Publisher", publisher_id):
 		return
-	_verify_organization_permission(client, repository, account)
+	publisher = frappe.get_doc("Builder Hub Publisher", publisher_id)
+	if publisher.status == "Blocked":
+		raise ProtocolValidationError("publisher_blocked", "This publisher is blocked.")
+	if str(publisher.github_account_id) != owner_id:
+		raise ProtocolValidationError(
+			"publisher_owner_mismatch",
+			"The extension namespace belongs to a different GitHub account.",
+		)
+	if (publisher.github_owner or "").lower() != owner_login.lower():
+		raise ProtocolValidationError(
+			"publisher_owner_mismatch",
+			"The extension namespace belongs to a different GitHub owner.",
+		)
 
 
-def _verify_organization_permission(client: GitHubClient, repository: dict, account) -> None:
-	if not account.username:
-		frappe.throw(_("The connected GitHub account has no username."))
-	permission = client.get_repository_permission(repository, account.username)
-	returned_user_id = str((permission.get("user") or {}).get("id"))
-	role = permission.get("role_name") or permission.get("permission")
-	if returned_user_id != str(account.userid) or role not in {"admin", "maintain", "write"}:
-		frappe.throw(_("Your GitHub account needs write access to the organization repository."))
+def _repository_license(repository: dict) -> str:
+	license_id = (repository.get("license") or {}).get("spdx_id")
+	if not license_id or license_id == "NOASSERTION":
+		raise ProtocolValidationError(
+			"license_mismatch", "The repository must declare a recognized SPDX license."
+		)
+	return license_id
+
+
+def _validate_publisher_name(value: str) -> None:
+	if not isinstance(value, str):
+		raise ProtocolValidationError("invalid_publisher_name", "Enter a publisher name.")
+	value = value.strip()
+	if not 1 <= len(value) <= PUBLISHER_NAME_MAX_LENGTH:
+		raise ProtocolValidationError(
+			"invalid_publisher_name",
+			"Publisher name must contain 1 through 80 characters.",
+		)
 
 
 def _validate_categories(categories: list[str] | str | None) -> list[str]:
-	categories = _parse_json(categories, [])
+	if categories in (None, ""):
+		categories = []
+	elif isinstance(categories, str):
+		try:
+			categories = frappe.parse_json(categories)
+		except ValueError:
+			categories = None
 	if not isinstance(categories, list) or len(categories) > 20 or len(categories) != len(set(categories)):
 		frappe.throw(_("Categories must be a unique list with at most 20 values."))
 	if any(not isinstance(item, str) or not CATEGORY.fullmatch(item) for item in categories):
@@ -148,17 +324,6 @@ def _validate_categories(categories: list[str] | str | None) -> list[str]:
 	return categories
 
 
-def _parse_json(value, default):
-	if value in (None, ""):
-		return default
-	if isinstance(value, str):
-		try:
-			return frappe.parse_json(value)
-		except ValueError:
-			return default
-	return value
-
-
-def _require_signed_in() -> None:
-	if frappe.session.user == "Guest":
-		frappe.throw(_("Sign in to submit an extension."), frappe.PermissionError)
+def _require_maintainer() -> None:
+	if not is_maintainer():
+		frappe.throw(_("A Builder Hub maintainer must perform this action."), frappe.PermissionError)
