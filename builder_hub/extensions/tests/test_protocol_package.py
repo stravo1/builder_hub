@@ -89,8 +89,7 @@ class PackageTests(unittest.TestCase):
 	def package(self, files=None, infos=None) -> Path:
 		files = files or {
 			"manifest.json": json.dumps(manifest()).encode(),
-			"main.js": b'import "./chunks/feature.js";',
-			"chunks/feature.js": b"export const feature = true;",
+			"main.js": b"export const feature = true;",
 			"icon.svg": b'<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0"/></svg>',
 		}
 		path = Path(self.temporary.name) / "extension.builderext"
@@ -120,6 +119,14 @@ class PackageTests(unittest.TestCase):
 			"unsupported_file",
 			self.package({"manifest.json": json.dumps(manifest()), "main.js": "", "run.exe": "x"}),
 		)
+
+	def test_rejects_every_file_outside_the_three_file_contract(self):
+		base = {
+			"manifest.json": json.dumps(manifest(icon=None)),
+			"main.js": "export const ready = true;",
+		}
+		self.assert_code("unexpected_file", self.package({**base, "chunk.js": "export {};"}))
+		self.assert_code("unexpected_file", self.package({**base, "assets/": ""}))
 
 	def test_rejects_traversal_absolute_windows_and_null_paths(self):
 		base = {"manifest.json": json.dumps(manifest(icon=None)), "main.js": ""}
@@ -159,25 +166,25 @@ class PackageTests(unittest.TestCase):
 			self.package({"manifest.json": json.dumps(manifest(version="2.0.0", icon=None)), "main.js": ""}),
 		)
 
-	def test_rejects_import_that_leaves_or_is_missing_from_package(self):
+	def test_rejects_relative_imports(self):
 		base_manifest = json.dumps(manifest(icon=None))
 		self.assert_code(
-			"unsafe_import",
+			"relative_import",
 			self.package({"manifest.json": base_manifest, "main.js": 'import "../escape.js";'}),
 		)
 		self.assert_code(
-			"missing_import",
+			"relative_import",
 			self.package({"manifest.json": base_manifest, "main.js": 'import "./missing.js";'}),
 		)
 
-	def test_enforces_compressed_extracted_and_file_count_limits(self):
+	def test_enforces_compressed_source_and_icon_size_limits(self):
 		path = self.package()
 		with patch("builder_hub.extensions.package.MAX_PACKAGE_SIZE", 1):
 			self.assert_code("package_too_large", path)
-		with patch("builder_hub.extensions.package.MAX_EXTRACTED_SIZE", 4):
-			self.assert_code("extracted_too_large", path)
-		with patch("builder_hub.extensions.package.MAX_PACKAGE_FILES", 1):
-			self.assert_code("too_many_files", path)
+		with patch("builder_hub.extensions.package.MAX_MAIN_JS_SIZE", 4):
+			self.assert_code("source_too_large", path)
+		with patch("builder_hub.extensions.package.MAX_ICON_SIZE", 4):
+			self.assert_code("unsafe_svg", path)
 
 	def test_rejects_unsafe_svg_forms(self):
 		unsafe = (
@@ -191,13 +198,13 @@ class PackageTests(unittest.TestCase):
 			with self.subTest(content=content), self.assertRaises(ProtocolValidationError):
 				validate_svg(content)
 
-	def test_rejects_svg_anywhere_not_only_manifest_icon(self):
+	def test_rejects_an_unnamed_svg(self):
 		files = {
 			"manifest.json": json.dumps(manifest(icon=None)),
 			"main.js": "",
-			"assets/unsafe.svg": '<svg xmlns="http://www.w3.org/2000/svg"><script/></svg>',
+			"unused.svg": '<svg xmlns="http://www.w3.org/2000/svg"/>',
 		}
-		self.assert_code("unsafe_svg", self.package(files))
+		self.assert_code("unexpected_file", self.package(files))
 
 
 if __name__ == "__main__":

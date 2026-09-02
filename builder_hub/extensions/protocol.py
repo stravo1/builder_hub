@@ -10,8 +10,8 @@ SCHEMA_VERSION = 1
 PROTOCOL_VERSION = 1
 
 MAX_PACKAGE_SIZE = 10 * 1024 * 1024
-MAX_EXTRACTED_SIZE = 30 * 1024 * 1024
-MAX_PACKAGE_FILES = 200
+MAX_MAIN_JS_SIZE = 5 * 1024 * 1024
+MAX_ICON_SIZE = 64 * 1024
 
 EXTENSION_NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$")
 SEMVER_PATTERN = re.compile(
@@ -42,20 +42,8 @@ SUPPORTED_CAPABILITIES = frozenset(
 ALLOWED_SUFFIXES = frozenset(
 	{
 		".js",
-		".mjs",
-		".css",
 		".json",
-		".map",
 		".svg",
-		".png",
-		".jpg",
-		".jpeg",
-		".webp",
-		".gif",
-		".woff",
-		".woff2",
-		".ttf",
-		".otf",
 	}
 )
 

@@ -16,8 +16,8 @@ from pathlib import Path, PurePosixPath
 
 from builder_hub.extensions.protocol import (
 	ALLOWED_SUFFIXES,
-	MAX_EXTRACTED_SIZE,
-	MAX_PACKAGE_FILES,
+	MAX_ICON_SIZE,
+	MAX_MAIN_JS_SIZE,
 	MAX_PACKAGE_SIZE,
 	ProtocolValidationError,
 	validate_manifest,
@@ -57,12 +57,17 @@ def validate_package(
 	try:
 		with zipfile.ZipFile(path) as archive:
 			entries = _inspect_archive(archive)
-			_validate_archive_contents(archive, entries)
 			manifest = _read_manifest(archive, entries)
+			_validate_package_files(entries, manifest.get("icon"))
 			_validate_package_identity(manifest, expected_name, expected_version)
-			main_js = _read_entry(archive, entries["main.js"], MAX_EXTRACTED_SIZE)
-			_validate_relative_imports(main_js, set(entries))
-			icon_name, icon_content = _validate_package_svgs(archive, entries, manifest.get("icon"))
+			main_js = _read_entry(
+				archive,
+				entries["main.js"],
+				MAX_MAIN_JS_SIZE,
+				code="source_too_large",
+			)
+			_reject_relative_imports(main_js)
+			icon_name, icon_content = _read_validated_icon(archive, entries, manifest.get("icon"))
 	except zipfile.BadZipFile:
 		raise ProtocolValidationError("invalid_zip", "The extension package is not a valid ZIP file.")
 
@@ -70,7 +75,7 @@ def validate_package(
 
 
 def validate_svg(content: bytes, name: str = "SVG") -> None:
-	if len(content) > MAX_EXTRACTED_SIZE:
+	if len(content) > MAX_ICON_SIZE:
 		raise ProtocolValidationError("unsafe_svg", f"{name} is too large.")
 	text = _decode_svg(content, name)
 	root = _parse_svg(text, name)
@@ -115,22 +120,30 @@ def _validate_svg_element(element: ET.Element, name: str) -> None:
 
 def _inspect_archive(archive: zipfile.ZipFile) -> dict[str, zipfile.ZipInfo]:
 	entries: dict[str, zipfile.ZipInfo] = {}
-	extracted_size = 0
-	file_count = 0
 	for entry in archive.infolist():
 		normalized = _normalized_path(entry.filename)
 		if entry.is_dir():
-			continue
+			raise ProtocolValidationError(
+				"unexpected_file", f"The package must not contain a directory: {normalized}."
+			)
 		_validate_file_entry(entry, normalized, entries)
 		entries[normalized] = entry
-		file_count += 1
-		extracted_size += entry.file_size
-		_validate_archive_limits(file_count, extracted_size)
 
 	for required in ("manifest.json", "main.js"):
 		if required not in entries:
 			raise ProtocolValidationError("missing_required_file", f"The package is missing {required}.")
 	return entries
+
+
+def _validate_package_files(entries: dict[str, zipfile.ZipInfo], icon_name: str | None) -> None:
+	expected = {"manifest.json", "main.js"}
+	if icon_name:
+		expected.add(icon_name)
+	unexpected = sorted(entries.keys() - expected)
+	if unexpected:
+		raise ProtocolValidationError(
+			"unexpected_file", f"The package contains an unexpected file: {unexpected[0]}."
+		)
 
 
 def _validate_file_entry(
@@ -148,29 +161,6 @@ def _validate_file_entry(
 		)
 	if Path(normalized).suffix not in ALLOWED_SUFFIXES:
 		raise ProtocolValidationError("unsupported_file", f"Unsupported package file: {normalized}.")
-
-
-def _validate_archive_limits(file_count: int, extracted_size: int) -> None:
-	if file_count > MAX_PACKAGE_FILES:
-		raise ProtocolValidationError("too_many_files", "The package contains more than 200 files.")
-	if extracted_size > MAX_EXTRACTED_SIZE:
-		raise ProtocolValidationError("extracted_too_large", "The extracted package exceeds 30 MB.")
-
-
-def _validate_archive_contents(archive: zipfile.ZipFile, entries: dict[str, zipfile.ZipInfo]) -> None:
-	"""Read every entry without extracting it, enforcing actual output and CRC checks."""
-	total = 0
-	try:
-		for entry in entries.values():
-			with archive.open(entry) as source:
-				while chunk := source.read(64 * 1024):
-					total += len(chunk)
-					if total > MAX_EXTRACTED_SIZE:
-						raise ProtocolValidationError(
-							"extracted_too_large", "The extracted package exceeds 30 MB."
-						)
-	except RuntimeError, zipfile.BadZipFile:
-		raise ProtocolValidationError("invalid_zip", "The extension package contains invalid file data.")
 
 
 def _normalized_path(name: str) -> str:
@@ -216,57 +206,43 @@ def _validate_package_identity(manifest: dict, expected_name: str, expected_vers
 		)
 
 
-def _validate_package_svgs(
+def _read_validated_icon(
 	archive: zipfile.ZipFile,
 	entries: dict[str, zipfile.ZipInfo],
 	icon_name: str | None,
 ) -> tuple[str | None, bytes | None]:
 	if icon_name and icon_name not in entries:
 		raise ProtocolValidationError("missing_icon", "The manifest icon is missing from the package.")
-	icon_content = None
-	for name, entry in entries.items():
-		if not name.endswith(".svg"):
-			continue
-		content = _read_entry(archive, entry, min(entry.file_size + 1, MAX_EXTRACTED_SIZE))
-		validate_svg(content, name)
-		if name == icon_name:
-			icon_content = content
-	return icon_name, icon_content
+	if not icon_name:
+		return None, None
+	content = _read_entry(archive, entries[icon_name], MAX_ICON_SIZE, code="unsafe_svg")
+	validate_svg(content, icon_name)
+	return icon_name, content
 
 
-def _read_entry(archive: zipfile.ZipFile, entry: zipfile.ZipInfo, limit: int) -> bytes:
+def _read_entry(
+	archive: zipfile.ZipFile,
+	entry: zipfile.ZipInfo,
+	limit: int,
+	*,
+	code: str = "entry_too_large",
+) -> bytes:
 	with archive.open(entry) as source:
 		content = source.read(limit + 1)
 	if len(content) > limit:
-		raise ProtocolValidationError("entry_too_large", f"Package file is too large: {entry.filename}.")
+		raise ProtocolValidationError(code, f"Package file is too large: {entry.filename}.")
 	return content
 
 
-def _validate_relative_imports(content: bytes, paths: set[str]) -> None:
+def _reject_relative_imports(content: bytes) -> None:
 	try:
 		source = content.decode("utf-8")
 	except UnicodeDecodeError:
 		raise ProtocolValidationError("invalid_javascript", "main.js must contain UTF-8 JavaScript.")
 	imports = [*IMPORT_PATTERN.findall(source), *URL_PATTERN.findall(source)]
 	for specifier in imports:
-		if not specifier.startswith("."):
-			continue
-		resolved = posixpath.normpath(specifier)
-		if resolved == ".." or resolved.startswith("../"):
-			raise ProtocolValidationError(
-				"unsafe_import", f"Relative import leaves the package: {specifier}."
-			)
-		candidates = {
-			resolved,
-			f"{resolved}.js",
-			f"{resolved}.mjs",
-			f"{resolved}/index.js",
-			f"{resolved}/index.mjs",
-		}
-		if not candidates.intersection(paths):
-			raise ProtocolValidationError(
-				"missing_import", f"Relative import is missing from the package: {specifier}."
-			)
+		if specifier.startswith("."):
+			raise ProtocolValidationError("relative_import", "main.js must not import a relative file.")
 
 
 def _sha256(path: Path) -> str:
