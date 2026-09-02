@@ -15,7 +15,6 @@ from urllib.parse import quote, urlparse
 import frappe
 import requests
 
-from builder_hub.extensions.content import sanitize_markdown
 from builder_hub.extensions.protocol import (
 	MAX_PACKAGE_SIZE,
 	ProtocolValidationError,
@@ -320,7 +319,7 @@ def get_repository_contract(client: GitHubClient, repository: dict, license_id: 
 	return {
 		"manifest": manifest,
 		"versions": versions,
-		"readme": sanitize_markdown(files["README.md"].decode("utf-8", errors="replace")),
+		"readme": files["README.md"].decode("utf-8", errors="replace"),
 	}
 
 

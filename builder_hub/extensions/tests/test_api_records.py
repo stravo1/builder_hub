@@ -14,6 +14,7 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 		frappe.set_user("Administrator")
 		self.publisher_id = f"test-{frappe.generate_hash(length=8).lower()}"
 		self.extension_name = f"{self.publisher_id}/icons"
+		self.readme = "README <script>bad()</script> [bad](javascript:alert(1))"
 		frappe.get_doc(
 			{
 				"doctype": "Builder Hub Publisher",
@@ -33,7 +34,7 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 				"publisher": self.publisher_id,
 				"label": "Icon Library",
 				"description": "Add icons.",
-				"readme": "Safe README",
+				"readme": self.readme,
 				"repository_url": f"https://github.com/{self.publisher_id}/icons",
 				"github_repository_id": frappe.generate_hash(length=12),
 				"license": "MIT",
@@ -101,7 +102,7 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 
 	def test_detail_has_readme_and_compatible_history_without_package_urls(self):
 		detail = api.get_extension(self.extension_name, 1)
-		self.assertEqual(detail["extension"]["readme"], "Safe README")
+		self.assertEqual(detail["extension"]["readme"], self.readme)
 		self.assertEqual([row["version"] for row in detail["releases"]], ["1.10.0", "1.2.0"])
 		self.assertNotIn("package_url", json.dumps(detail))
 

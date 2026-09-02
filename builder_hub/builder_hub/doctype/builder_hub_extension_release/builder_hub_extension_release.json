@@ -30,7 +30,7 @@
   {"fieldname": "package_url", "fieldtype": "Data", "label": "Package URL", "options": "URL"},
   {"fieldname": "package_sha256", "fieldtype": "Data", "label": "Package SHA-256"},
   {"fieldname": "package_size", "fieldtype": "Int", "label": "Package Size"},
-  {"fieldname": "release_notes", "fieldtype": "Markdown Editor", "label": "Release Notes"},
+  {"fieldname": "release_notes", "fieldtype": "Markdown Editor", "ignore_xss_filter": 1, "label": "Release Notes"},
   {"fieldname": "validation_errors", "fieldtype": "JSON", "label": "Validation Errors", "read_only": 1},
   {"fieldname": "published_on", "fieldtype": "Datetime", "label": "Published On", "read_only": 1},
   {"default": "Validating", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Validating\nPending Review\nPublished\nRejected\nYanked\nBlocked", "reqd": 1}

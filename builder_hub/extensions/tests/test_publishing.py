@@ -104,7 +104,7 @@ class PublishingTests(IntegrationTestCase):
 		return {
 			"manifest": manifest,
 			"versions": versions or {manifest["version"]: manifest["v"]},
-			"readme": "Safe README",
+			"readme": "README <script>bad()</script> [bad](javascript:alert(1))",
 		}
 
 	def github_release(self, version: str, *, release_id="release-1", asset_id="asset-1") -> dict:
@@ -145,10 +145,20 @@ class PublishingTests(IntegrationTestCase):
 		first = self.import_version("1.0.0", first_release=True)
 		self.assertEqual(first.status, "Pending Review")
 		self.assertEqual(len(first.package_sha256), 64)
-		self.assertNotIn("<script>", first.release_notes)
-		self.assertNotIn("javascript:", first.release_notes)
+		self.assertEqual(
+			first.release_notes,
+			"Notes <script>bad()</script> [bad](javascript:alert(1))",
+		)
 		self.assertEqual(
 			frappe.db.get_value("Builder Hub Extension", self.extension_name, "label"), "Imported icons"
+		)
+		self.assertEqual(
+			frappe.db.get_value("Builder Hub Extension", self.extension_name, "description"),
+			"Imported icon package.",
+		)
+		self.assertEqual(
+			frappe.db.get_value("Builder Hub Extension", self.extension_name, "readme"),
+			"README <script>bad()</script> [bad](javascript:alert(1))",
 		)
 
 		frappe.db.set_value("Builder Hub Extension", self.extension_name, "status", "Pending Review")

@@ -9,12 +9,12 @@ import frappe
 from frappe import _
 from frappe.utils import now_datetime
 
-from builder_hub.extensions.content import sanitize_markdown, store_catalog_icon
 from builder_hub.extensions.github import (
 	GitHubClient,
 	get_repository_contract,
 	validate_repository,
 )
+from builder_hub.extensions.icons import store_catalog_icon
 from builder_hub.extensions.package import ValidatedPackage, validate_package
 from builder_hub.extensions.protocol import (
 	ProtocolValidationError,
@@ -265,7 +265,7 @@ def _apply_validated_release(
 	release.package_url = asset["browser_download_url"]
 	release.package_sha256 = validated.package_sha256
 	release.package_size = validated.package_size
-	release.release_notes = sanitize_markdown(release_data.get("body") or "")
+	release.release_notes = release_data.get("body") or ""
 	release.validation_errors = frappe.as_json([])
 	if first_release:
 		release.status = "Pending Review"
