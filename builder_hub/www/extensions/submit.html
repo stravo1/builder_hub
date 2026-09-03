@@ -64,7 +64,7 @@
 	<section class="publication-card">
 		<h1>{{ _("Publish a Builder extension") }}</h1>
 		<p class="intro">
-			{{ _("Submit a public GitHub repository. Builder Hub validates its manifest, release, license, and package before an administrator reviews it.") }}
+			{{ _("Submit a public GitHub repository. Its owner becomes the publisher, and Builder Hub validates the manifest, release, license, and package before an administrator reviews it.") }}
 		</p>
 
 		<form id="publication-form">
@@ -79,21 +79,7 @@
 					pattern="https://github\.com/[^/]+/[^/]+/?"
 					required
 				>
-				<p class="help-text">{{ _("The repository must be public and contain manifest.json, README.md, and LICENSE.") }}</p>
-			</div>
-
-			<div class="form-group">
-				<label for="publisher-name">{{ _("Publisher name") }}</label>
-				<input
-					id="publisher-name"
-					name="publisher_name"
-					type="text"
-					class="form-control"
-					maxlength="80"
-					placeholder="Acme"
-					required
-				>
-				<p class="help-text">{{ _("The publisher ID is taken from the namespace in manifest.name.") }}</p>
+				<p class="help-text">{{ _("The repository must be public and contain manifest.json, README.md, and LICENSE. New publishers use the GitHub owner as their manifest namespace.") }}</p>
 			</div>
 
 			<div class="form-group">
@@ -142,7 +128,6 @@
 					method: "builder_hub.extensions.api.request_publication",
 					args: {
 						repository_url: data.get("repository_url"),
-						publisher_name: data.get("publisher_name"),
 						categories: JSON.stringify(categories),
 					},
 				});

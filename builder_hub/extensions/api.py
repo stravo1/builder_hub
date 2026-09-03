@@ -180,10 +180,9 @@ def get_release_status(releases: list[dict] | str) -> dict:
 @rate_limit(limit=5, seconds=60 * 60, methods="POST")
 def request_publication(
 	repository_url: str,
-	publisher_name: str,
 	categories: list[str] | str | None = None,
 ) -> dict:
-	return submission.request_publication(repository_url, publisher_name, categories)
+	return submission.request_publication(repository_url, categories)
 
 
 @frappe.whitelist()

@@ -26,7 +26,6 @@ from builder_hub.extensions.publishing import (
 )
 
 CATEGORY = re.compile(r"^[a-z0-9][a-z0-9-]{0,49}$")
-PUBLISHER_NAME_MAX_LENGTH = 80
 
 
 @dataclass(frozen=True)
@@ -41,7 +40,6 @@ class ValidatedPublication:
 
 def request_publication(
 	repository_url: str,
-	publisher_name: str,
 	categories: list[str] | str | None = None,
 	*,
 	client: GitHubClient | None = None,
@@ -50,7 +48,6 @@ def request_publication(
 	try:
 		publication = validate_publication(
 			repository_url,
-			publisher_name,
 			_validate_categories(categories),
 			client=client,
 		)
@@ -68,7 +65,6 @@ def request_publication(
 
 def validate_publication(
 	repository_url: str,
-	publisher_name: str,
 	categories: list[str],
 	*,
 	client: GitHubClient | None = None,
@@ -86,9 +82,12 @@ def validate_publication(
 	license_id = _repository_license(repository)
 	contract = get_repository_contract(client, repository, license_id)
 	manifest = contract["manifest"]
-	publisher_id = manifest["name"].split("/", 1)[0]
-	_validate_publisher_name(publisher_name)
-	_validate_publisher_identity(publisher_id, owner_id, owner_login)
+	publisher_id, publisher_name = _resolve_publisher(owner_id, owner_login)
+	if manifest["name"].split("/", 1)[0] != publisher_id:
+		raise ProtocolValidationError(
+			"publisher_owner_mismatch",
+			f"Manifest name must use the repository owner's {publisher_id} namespace.",
+		)
 	release = validate_release_source(
 		client,
 		repository,
@@ -99,7 +98,7 @@ def validate_publication(
 	return ValidatedPublication(
 		repository=repository,
 		publisher_id=publisher_id,
-		publisher_name=publisher_name.strip(),
+		publisher_name=publisher_name,
 		license_id=license_id,
 		categories=categories,
 		release=release,
@@ -119,7 +118,6 @@ def approve_publication_request(
 	try:
 		publication = validate_publication(
 			request.repository_url,
-			request.publisher_name,
 			_validate_categories(request.categories),
 			client=client,
 		)
@@ -271,22 +269,23 @@ def _assert_request_unchanged(request, publication: ValidatedPublication) -> Non
 		)
 
 
-def _validate_publisher_identity(publisher_id: str, owner_id: str, owner_login: str) -> None:
-	if not frappe.db.exists("Builder Hub Publisher", publisher_id):
-		return
+def _resolve_publisher(owner_id: str, owner_login: str) -> tuple[str, str]:
+	publisher_id = frappe.db.get_value(
+		"Builder Hub Publisher", {"github_account_id": owner_id}, "publisher_id"
+	)
+	if not publisher_id:
+		publisher_id = owner_login.lower()
+		if frappe.db.exists("Builder Hub Publisher", publisher_id):
+			raise ProtocolValidationError(
+				"publisher_owner_mismatch",
+				"The repository owner belongs to a different GitHub account.",
+			)
+		return publisher_id, owner_login
+
 	publisher = frappe.get_doc("Builder Hub Publisher", publisher_id)
 	if publisher.status == "Blocked":
 		raise ProtocolValidationError("publisher_blocked", "This publisher is blocked.")
-	if str(publisher.github_account_id) != owner_id:
-		raise ProtocolValidationError(
-			"publisher_owner_mismatch",
-			"The extension namespace belongs to a different GitHub account.",
-		)
-	if (publisher.github_owner or "").lower() != owner_login.lower():
-		raise ProtocolValidationError(
-			"publisher_owner_mismatch",
-			"The extension namespace belongs to a different GitHub owner.",
-		)
+	return publisher.publisher_id, publisher.display_name
 
 
 def _repository_license(repository: dict) -> str:
@@ -296,17 +295,6 @@ def _repository_license(repository: dict) -> str:
 			"license_mismatch", "The repository must declare a recognized SPDX license."
 		)
 	return license_id
-
-
-def _validate_publisher_name(value: str) -> None:
-	if not isinstance(value, str):
-		raise ProtocolValidationError("invalid_publisher_name", "Enter a publisher name.")
-	value = value.strip()
-	if not 1 <= len(value) <= PUBLISHER_NAME_MAX_LENGTH:
-		raise ProtocolValidationError(
-			"invalid_publisher_name",
-			"Publisher name must contain 1 through 80 characters.",
-		)
 
 
 def _validate_categories(categories: list[str] | str | None) -> list[str]:
