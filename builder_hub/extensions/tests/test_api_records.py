@@ -49,7 +49,6 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 
 	def tearDown(self):
 		frappe.set_user("Administrator")
-		frappe.db.delete("Builder Hub Extension Audit", {"target_name": ("like", f"{self.publisher_id}%")})
 		frappe.db.delete("Builder Hub Extension Release", {"extension": self.extension_name})
 		frappe.db.delete("Builder Hub Extension", self.extension_name)
 		frappe.db.delete("Builder Hub Publisher", self.publisher_id)

@@ -132,7 +132,7 @@ def approve_publication_request(
 	release = import_validated_release(extension.name, publication.release, first_release=True)
 	if release.status != "Pending Review":
 		frappe.throw(_("The first release could not be prepared for review."))
-	result = approve_first_release(release.name, reason or "Publication request approved.")
+	result = approve_first_release(release.name)
 	request.status = "Approved"
 	request.review_reason = reason
 	request.reviewed_by = frappe.session.user

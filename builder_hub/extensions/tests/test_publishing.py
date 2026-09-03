@@ -59,7 +59,6 @@ class PublishingTests(IntegrationTestCase):
 	def tearDown(self):
 		for path in self.paths:
 			Path(path).unlink(missing_ok=True)
-		frappe.db.delete("Builder Hub Extension Audit", {"target_name": ("like", f"{self.publisher_id}%")})
 		frappe.db.delete("Builder Hub Extension Release", {"extension": self.extension_name})
 		frappe.db.delete("Builder Hub Extension", self.extension_name)
 		frappe.db.delete("Builder Hub Publisher", self.publisher_id)
@@ -161,7 +160,7 @@ class PublishingTests(IntegrationTestCase):
 		)
 
 		frappe.db.set_value("Builder Hub Extension", self.extension_name, "status", "Pending Review")
-		publishing.approve_first_release(first.name, "Identity and package reviewed.")
+		publishing.approve_first_release(first.name)
 		self.assertEqual(frappe.db.get_value(first.doctype, first.name, "status"), "Published")
 
 		later_manifest = self.manifest("1.1.0")
@@ -172,12 +171,6 @@ class PublishingTests(IntegrationTestCase):
 		)
 		self.assertEqual(later.status, "Published")
 		self.assertIsNotNone(later.published_on)
-		self.assertGreaterEqual(
-			frappe.db.count(
-				"Builder Hub Extension Audit", {"target_name": ("like", f"{self.publisher_id}%")}
-			),
-			3,
-		)
 
 	def test_validation_failure_is_author_visible_and_temp_file_is_deleted(self):
 		wrong_manifest = self.manifest("1.0.0", name=f"{self.publisher_id}/other")
@@ -189,7 +182,7 @@ class PublishingTests(IntegrationTestCase):
 	def test_existing_published_release_rejects_changed_asset_identity(self):
 		first = self.import_version("1.0.0", first_release=True)
 		frappe.db.set_value("Builder Hub Extension", self.extension_name, "status", "Pending Review")
-		publishing.approve_first_release(first.name, "Reviewed.")
+		publishing.approve_first_release(first.name)
 		changed = self.github_release("1.0.0", asset_id="replacement-asset")
 		with self.assertRaises(ProtocolValidationError) as raised:
 			publishing.import_release(

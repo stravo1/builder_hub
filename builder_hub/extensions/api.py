@@ -197,8 +197,8 @@ def reject_publication_request(request_name: str, reason: str) -> dict:
 
 
 @frappe.whitelist()
-def approve_first_release(release_name: str, reason: str | None = None) -> dict:
-	return publishing.approve_first_release(release_name, reason)
+def approve_first_release(release_name: str) -> dict:
+	return publishing.approve_first_release(release_name)
 
 
 @frappe.whitelist()
@@ -214,23 +214,23 @@ def request_release_check(extension_name: str) -> dict:
 
 
 @frappe.whitelist()
-def yank_release(release_name: str, reason: str) -> dict:
-	return publishing.yank_release(release_name, reason)
+def yank_release(release_name: str) -> dict:
+	return publishing.yank_release(release_name)
 
 
 @frappe.whitelist()
-def block_release(release_name: str, reason: str) -> dict:
-	return publishing.block_release(release_name, reason)
+def block_release(release_name: str) -> dict:
+	return publishing.block_release(release_name)
 
 
 @frappe.whitelist()
-def block_extension(extension_name: str, reason: str) -> dict:
-	return publishing.block_extension(extension_name, reason)
+def block_extension(extension_name: str) -> dict:
+	return publishing.block_extension(extension_name)
 
 
 @frappe.whitelist()
-def block_publisher(publisher_id: str, reason: str) -> dict:
-	return publishing.block_publisher(publisher_id, reason)
+def block_publisher(publisher_id: str) -> dict:
+	return publishing.block_publisher(publisher_id)
 
 
 def _public_extension(extension_name: str):

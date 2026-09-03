@@ -204,15 +204,15 @@ def _failure_metric(error_code: str, transient: bool) -> str:
 	return "check_failures" if transient else "validation_failures"
 
 
-def approve_first_release(release_name: str, reason: str | None = None) -> dict:
+def approve_first_release(release_name: str) -> dict:
 	_require_maintainer()
 	release = frappe.get_doc("Builder Hub Extension Release", release_name)
 	extension = frappe.get_doc("Builder Hub Extension", release.extension)
 	if release.status != "Pending Review" or extension.status != "Pending Review":
 		frappe.throw(_("Only a pending first release can be published."))
-	_set_status(extension, "Published", reason)
+	_set_status(extension, "Published")
 	release.published_on = now_datetime()
-	_set_status(release, "Published", reason, save=True)
+	_set_status(release, "Published", save=True)
 	clear_public_caches()
 	return {"extension": extension.name, "release": release.name, "status": "Published"}
 
@@ -225,53 +225,49 @@ def reject_first_release(release_name: str, reason: str) -> dict:
 	if release.status != "Pending Review":
 		frappe.throw(_("Only a pending release can be rejected."))
 	release.validation_errors = frappe.as_json([{"code": "maintainer_rejected", "message": reason.strip()}])
-	_set_status(release, "Rejected", reason, save=True)
+	_set_status(release, "Rejected", save=True)
 	return {"release": release.name, "status": release.status}
 
 
-def yank_release(release_name: str, reason: str) -> dict:
+def yank_release(release_name: str) -> dict:
 	_require_maintainer()
-	_require_reason(reason)
 	release = frappe.get_doc("Builder Hub Extension Release", release_name)
 	if release.status != "Published":
 		frappe.throw(_("Only a published release can be yanked."))
-	_set_status(release, "Yanked", reason, save=True)
+	_set_status(release, "Yanked", save=True)
 	clear_public_caches()
 	return {"release": release.name, "status": release.status}
 
 
-def block_release(release_name: str, reason: str) -> dict:
+def block_release(release_name: str) -> dict:
 	_require_maintainer()
-	_require_reason(reason)
 	release = frappe.get_doc("Builder Hub Extension Release", release_name)
-	_set_status(release, "Blocked", reason, save=True)
+	_set_status(release, "Blocked", save=True)
 	clear_public_caches()
 	return {"release": release.name, "status": release.status}
 
 
-def block_extension(extension_name: str, reason: str) -> dict:
+def block_extension(extension_name: str) -> dict:
 	_require_maintainer()
-	_require_reason(reason)
 	extension = frappe.get_doc("Builder Hub Extension", extension_name)
-	_set_status(extension, "Blocked", reason)
+	_set_status(extension, "Blocked")
 	for release_name in frappe.get_all(
 		"Builder Hub Extension Release", filters={"extension": extension.name}, pluck="name"
 	):
 		release = frappe.get_doc("Builder Hub Extension Release", release_name)
-		_set_status(release, "Blocked", reason, save=True)
+		_set_status(release, "Blocked", save=True)
 	clear_public_caches()
 	return {"extension": extension.name, "status": extension.status}
 
 
-def block_publisher(publisher_id: str, reason: str) -> dict:
+def block_publisher(publisher_id: str) -> dict:
 	_require_maintainer()
-	_require_reason(reason)
 	publisher = frappe.get_doc("Builder Hub Publisher", publisher_id)
-	_set_status(publisher, "Blocked", reason)
+	_set_status(publisher, "Blocked")
 	for extension_name in frappe.get_all(
 		"Builder Hub Extension", filters={"publisher": publisher.name}, pluck="name"
 	):
-		block_extension(extension_name, reason)
+		block_extension(extension_name)
 	clear_public_caches()
 	return {"publisher": publisher.name, "status": publisher.status}
 
@@ -295,7 +291,6 @@ def _apply_validated_release(
 	contract: dict,
 	first_release: bool,
 ) -> None:
-	previous_status = release.status
 	release.protocol_version = validated.manifest["v"]
 	release.manifest = frappe.as_json(validated.manifest)
 	release.github_release_id = str(release_data["id"])
@@ -318,12 +313,6 @@ def _apply_validated_release(
 		release.published_on = now_datetime()
 	release.save(ignore_permissions=True)
 	if release.status == "Published":
-		_record_audit(
-			release,
-			previous_status,
-			"Published",
-			"Validated GitHub release imported automatically.",
-		)
 		clear_public_caches()
 
 
@@ -393,39 +382,17 @@ def _get_or_create_release(extension_name: str, version: str):
 	).insert(ignore_permissions=True)
 
 
-def _set_status(doc, status: str, reason: str | None, *, save: bool = False) -> None:
-	previous = doc.status
+def _set_status(doc, status: str, *, save: bool = False) -> None:
 	doc.status = status
 	if save:
 		doc.save(ignore_permissions=True)
 	else:
 		doc.db_set("status", status)
-	_record_audit(doc, previous, status, reason)
-
-
-def _record_audit(doc, previous: str | None, status: str, reason: str | None) -> None:
-	frappe.get_doc(
-		{
-			"doctype": "Builder Hub Extension Audit",
-			"target_doctype": doc.doctype,
-			"target_name": doc.name,
-			"previous_status": previous,
-			"status": status,
-			"reason": reason,
-			"changed_by": frappe.session.user,
-			"changed_on": now_datetime(),
-		}
-	).insert(ignore_permissions=True)
 
 
 def _require_maintainer() -> None:
 	if not is_maintainer():
 		frappe.throw(_("A Builder Hub maintainer must perform this action."), frappe.PermissionError)
-
-
-def _require_reason(reason: str | None) -> None:
-	if not reason or not reason.strip():
-		frappe.throw(_("A reason is required for this state change."))
 
 
 def _metric(name: str) -> None:
