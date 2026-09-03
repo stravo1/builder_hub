@@ -84,14 +84,10 @@ def validate_release_source(
 	release_data: dict | None = None,
 ) -> ValidatedReleaseImport:
 	"""Validate one repository release without creating registry records."""
-	if version not in contract["versions"]:
-		raise ProtocolValidationError(
-			"version_not_declared", "The release version is missing from versions.json."
-		)
 	release_data = release_data or client.get_release(repository, version)
 	asset = _validate_release(release_data, extension_name, version)
 	package = _download_and_validate_package(client, asset, extension_name, version)
-	_validate_protocol_consistency(package, contract, version)
+	_validate_current_manifest(package, contract)
 	return ValidatedReleaseImport(release_data, asset, package, contract)
 
 
@@ -177,12 +173,11 @@ def _download_and_validate_package(
 			os.unlink(temporary_path)
 
 
-def _validate_protocol_consistency(package: ValidatedPackage, contract: dict, version: str) -> None:
-	if package.manifest["v"] != contract["versions"][version]:
-		raise ProtocolValidationError(
-			"protocol_mismatch", "The package protocol does not match versions.json."
-		)
-	if version == contract["manifest"]["version"] and package.manifest != contract["manifest"]:
+def _validate_current_manifest(package: ValidatedPackage, contract: dict) -> None:
+	if (
+		package.manifest["version"] == contract["manifest"]["version"]
+		and package.manifest != contract["manifest"]
+	):
 		raise ProtocolValidationError(
 			"root_manifest_mismatch", "The package manifest does not match the root manifest.json."
 		)

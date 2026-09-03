@@ -15,7 +15,6 @@ from builder_hub.extensions.protocol import (
 	expected_package_name,
 	semver_key,
 	validate_manifest,
-	validate_versions,
 )
 
 
@@ -65,11 +64,6 @@ class ProtocolTests(unittest.TestCase):
 		for value in invalid:
 			with self.subTest(value=value), self.assertRaises(ProtocolValidationError):
 				validate_manifest(value)
-
-	def test_versions_match_current_manifest(self):
-		self.assertEqual(validate_versions({"1.2.0": 1}, manifest()), {"1.2.0": 1})
-		with self.assertRaisesRegex(ProtocolValidationError, "match"):
-			validate_versions({"1.2.0": 2}, manifest())
 
 	def test_semver_precedence_and_package_name(self):
 		values = ["1.0.0", "1.0.0-beta.2", "1.0.0-beta.11", "1.0.0-alpha"]

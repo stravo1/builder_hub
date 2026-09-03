@@ -9,7 +9,7 @@ from frappe import _
 from frappe.utils import now_datetime
 
 from builder_hub.extensions.github import GitHubClient, get_repository_contract, validate_repository
-from builder_hub.extensions.protocol import ProtocolValidationError, semver_key
+from builder_hub.extensions.protocol import SEMVER_PATTERN, ProtocolValidationError, semver_key
 from builder_hub.extensions.publishing import import_release, is_maintainer
 
 MANUAL_CHECK_INTERVAL = 15 * 60
@@ -63,15 +63,8 @@ def check_repository(extension_name: str, *, client: GitHubClient | None = None)
 			return {"extension": extension.name, "checked": True, "unchanged": True, "imported": []}
 
 		contract = get_repository_contract(client, repository, extension.license)
-		available = {
-			item.get("tag_name"): item
-			for item in response.data or []
-			if not item.get("draft") and not item.get("prerelease")
-		}
 		imported = []
-		for version in sorted(contract["versions"], key=semver_key):
-			if version not in available:
-				continue
+		for version, release_data in get_release_index(response.data or []).items():
 			existing_status = frappe.db.get_value(
 				"Builder Hub Extension Release", f"{extension.name}@{version}", "status"
 			)
@@ -83,7 +76,7 @@ def check_repository(extension_name: str, *, client: GitHubClient | None = None)
 				client=client,
 				repository=repository,
 				contract=contract,
-				release_data=available[version],
+				release_data=release_data,
 			)
 			imported.append({"version": version, "status": release.status})
 
@@ -99,6 +92,19 @@ def check_repository(extension_name: str, *, client: GitHubClient | None = None)
 			"Extension release check failed for %s: %s (%s)", extension.name, error.message, error.code
 		)
 		return {"extension": extension.name, "checked": False, "error": error.as_dict()}
+
+
+def get_release_index(releases: list[dict]) -> dict[str, dict]:
+	"""Index published GitHub releases with valid SemVer tags in precedence order."""
+	available = {
+		release["tag_name"]: release
+		for release in releases
+		if isinstance(release.get("tag_name"), str)
+		and SEMVER_PATTERN.fullmatch(release["tag_name"])
+		and not release.get("draft")
+		and not release.get("prerelease")
+	}
+	return {version: available[version] for version in sorted(available, key=semver_key)}
 
 
 def request_release_check(extension_name: str) -> dict:

@@ -98,10 +98,9 @@ class PublishingTests(IntegrationTestCase):
 			"html_url": f"https://github.com/{self.publisher_id}/icons",
 		}
 
-	def contract(self, manifest: dict, versions: dict | None = None) -> dict:
+	def contract(self, manifest: dict) -> dict:
 		return {
 			"manifest": manifest,
-			"versions": versions or {manifest["version"]: manifest["v"]},
 			"readme": "README <script>bad()</script> [bad](javascript:alert(1))",
 		}
 
@@ -123,7 +122,7 @@ class PublishingTests(IntegrationTestCase):
 			],
 		}
 
-	def import_version(self, version: str, *, first_release=False, manifest=None, versions=None):
+	def import_version(self, version: str, *, first_release=False, manifest=None):
 		manifest = manifest or self.manifest(version)
 		package = self.package(manifest)
 		client = PackageClient(package)
@@ -133,7 +132,7 @@ class PublishingTests(IntegrationTestCase):
 			first_release=first_release,
 			client=client,
 			repository=self.repository(),
-			contract=self.contract(manifest, versions),
+			contract=self.contract(manifest),
 			release_data=self.github_release(version),
 		)
 		self.assertFalse(package.exists(), "temporary package must be deleted")
@@ -164,11 +163,7 @@ class PublishingTests(IntegrationTestCase):
 		self.assertEqual(frappe.db.get_value(first.doctype, first.name, "status"), "Published")
 
 		later_manifest = self.manifest("1.1.0")
-		later = self.import_version(
-			"1.1.0",
-			manifest=later_manifest,
-			versions={"1.0.0": 1, "1.1.0": 1},
-		)
+		later = self.import_version("1.1.0", manifest=later_manifest)
 		self.assertEqual(later.status, "Published")
 		self.assertIsNotNone(later.published_on)
 

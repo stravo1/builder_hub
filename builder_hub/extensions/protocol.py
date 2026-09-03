@@ -136,31 +136,6 @@ def _validate_capabilities(capabilities: object) -> None:
 		)
 
 
-def validate_versions(versions: object, current_manifest: Mapping | None = None) -> dict[str, int]:
-	if not isinstance(versions, Mapping) or not versions:
-		raise ProtocolValidationError("invalid_versions", "versions.json must contain a non-empty object.")
-
-	validated: dict[str, int] = {}
-	for version, protocol_version in versions.items():
-		if not isinstance(version, str) or not SEMVER_PATTERN.fullmatch(version):
-			raise ProtocolValidationError(
-				"invalid_versions", f"Invalid SemVer key in versions.json: {version}."
-			)
-		if type(protocol_version) is not int or protocol_version < 1:
-			raise ProtocolValidationError(
-				"invalid_versions", f"Protocol version for {version} must be a positive integer."
-			)
-		validated[version] = protocol_version
-
-	if current_manifest:
-		version = current_manifest.get("version")
-		if validated.get(version) != current_manifest.get("v"):
-			raise ProtocolValidationError(
-				"versions_mismatch", "The current manifest version and protocol must match versions.json."
-			)
-	return validated
-
-
 def semver_key(version: str) -> tuple:
 	"""A deterministic SemVer precedence key; build metadata does not affect precedence."""
 	match = SEMVER_PATTERN.fullmatch(version)

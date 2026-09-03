@@ -70,7 +70,6 @@ class PublicationRequestTests(IntegrationTestCase):
 				"manifest.json": json.dumps(self.manifest).encode(),
 				"README.md": b"README <script>untrusted()</script>",
 				"LICENSE": b"MIT License",
-				"versions.json": b'{"1.0.0": 1}',
 			},
 			self._release(),
 			self.package,

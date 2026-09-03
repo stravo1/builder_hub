@@ -19,7 +19,6 @@ from builder_hub.extensions.protocol import (
 	MAX_PACKAGE_SIZE,
 	ProtocolValidationError,
 	validate_manifest,
-	validate_versions,
 )
 
 API_ROOT = "https://api.github.com"
@@ -315,15 +314,13 @@ def get_repository_contract(client: GitHubClient, repository: dict, license_id: 
 	files = _get_required_repository_files(client, repository)
 	try:
 		manifest = validate_manifest(json.loads(files["manifest.json"].decode("utf-8")))
-		versions = validate_versions(json.loads(files["versions.json"].decode("utf-8")), manifest)
 	except UnicodeDecodeError, json.JSONDecodeError:
 		raise ProtocolValidationError(
-			"invalid_repository_json", "Repository manifest.json and versions.json must contain UTF-8 JSON."
+			"invalid_repository_json", "Repository manifest.json must contain UTF-8 JSON."
 		)
 	_validate_repository_license(repository, license_id, files["LICENSE"])
 	return {
 		"manifest": manifest,
-		"versions": versions,
 		"readme": files["README.md"].decode("utf-8", errors="replace"),
 	}
 
@@ -347,7 +344,7 @@ def parse_repository_url(url: str) -> tuple[str, str]:
 
 def _get_required_repository_files(client: GitHubClient, repository: dict) -> dict[str, bytes]:
 	files = {}
-	for name in ("manifest.json", "README.md", "LICENSE", "versions.json"):
+	for name in ("manifest.json", "README.md", "LICENSE"):
 		try:
 			files[name] = client.get_repository_file(repository, name)
 		except ProtocolValidationError as error:
