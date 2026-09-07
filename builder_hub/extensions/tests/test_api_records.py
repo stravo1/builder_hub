@@ -96,7 +96,29 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 		item = next(item for item in catalog["extensions"] if item["name"] == self.extension_name)
 		self.assertEqual(item["latest_release"]["version"], "1.10.0")
 		self.assertNotIn("package_url", json.dumps(item))
-		self.assertTrue(item["icon_url"].endswith("/files/extension-icons/" + ("a" * 64) + ".svg"))
+		self.assertTrue(item["icon"].endswith("/files/extension-icons/" + ("a" * 64) + ".svg"))
+
+	def test_catalog_paginates_and_reports_total_count(self):
+		from builder_hub.extensions.protocol import CATALOG_PAGE_SIZE
+
+		full = api.get_catalog(1)["extensions"]
+
+		first_page = api.get_catalog(1, page=1)
+		self.assertEqual(first_page["extensions"], full[:CATALOG_PAGE_SIZE])
+		self.assertEqual(first_page["page"], 1)
+		self.assertEqual(first_page["total_count"], len(full))
+		self.assertEqual(first_page["has_more"], len(full) > CATALOG_PAGE_SIZE)
+
+		last_page_number = -(-len(full) // CATALOG_PAGE_SIZE)
+		last_page = api.get_catalog(1, page=last_page_number)
+		self.assertEqual(last_page["extensions"], full[(last_page_number - 1) * CATALOG_PAGE_SIZE :])
+		self.assertFalse(last_page["has_more"])
+
+	def test_catalog_rejects_invalid_page(self):
+		with self.assertRaises(frappe.ValidationError):
+			api.get_catalog(1, page=0)
+		with self.assertRaises(frappe.ValidationError):
+			api.get_catalog(1, page=-1)
 
 	def test_detail_has_readme_and_compatible_history_without_package_urls(self):
 		detail = api.get_extension(self.extension_name, 1)

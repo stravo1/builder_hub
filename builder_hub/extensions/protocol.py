@@ -13,6 +13,8 @@ MAX_PACKAGE_SIZE = 10 * 1024 * 1024
 MAX_MAIN_JS_SIZE = 5 * 1024 * 1024
 MAX_ICON_SIZE = 64 * 1024
 
+CATALOG_PAGE_SIZE = 100
+
 EXTENSION_NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9-]*$")
 SEMVER_PATTERN = re.compile(
 	r"^(0|[1-9]\d*)\."

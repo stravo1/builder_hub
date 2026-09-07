@@ -13,6 +13,7 @@ from frappe.utils.caching import redis_cache
 
 from builder_hub.extensions import publishing, submission
 from builder_hub.extensions.protocol import (
+	CATALOG_PAGE_SIZE,
 	EXTENSION_NAME_PATTERN,
 	EXTENSIONS_API_VERSION,
 	SCHEMA_VERSION,
@@ -31,12 +32,12 @@ def get_info() -> dict:
 
 
 @frappe.whitelist(allow_guest=True)
-def get_catalog(protocol_version: int | str = 1) -> dict:
-	return _get_catalog(_protocol_version(protocol_version), get_url())
+def get_catalog(protocol_version: int | str = 1, page: int | str = 1) -> dict:
+	return _get_catalog(_protocol_version(protocol_version), get_url(), _page(page))
 
 
 @redis_cache(ttl=600)
-def _get_catalog(protocol_version: int, base_url: str) -> dict:
+def _get_catalog(protocol_version: int, base_url: str, page: int) -> dict:
 	items = []
 	for extension in frappe.get_all(
 		"Hub Extension",
@@ -51,13 +52,20 @@ def _get_catalog(protocol_version: int, base_url: str) -> dict:
 		release = _latest_release(extension.name, protocol_version)
 		if release:
 			items.append(_catalog_item(extension, publisher, release, base_url))
-	return {"schema_version": SCHEMA_VERSION, "extensions": items}
+	start = (page - 1) * CATALOG_PAGE_SIZE
+	return {
+		"schema_version": SCHEMA_VERSION,
+		"extensions": items[start : start + CATALOG_PAGE_SIZE],
+		"page": page,
+		"total_count": len(items),
+		"has_more": start + CATALOG_PAGE_SIZE < len(items),
+	}
 
 
 @frappe.whitelist(allow_guest=True)
-def get_extension(extension_name: str, protocol_version: int | str = 1) -> dict:
+def get_extension(name: str, protocol_version: int | str = 1) -> dict:
 	protocol_version = _protocol_version(protocol_version)
-	extension = _public_extension(extension_name)
+	extension = _public_extension(name)
 	publisher = _publisher(extension.publisher)
 	if not publisher or publisher.status != "Active":
 		_not_found()
@@ -273,7 +281,7 @@ def _catalog_item(extension, publisher, release, base_url: str, *, include_lates
 		"repository_url": extension.repository_url,
 		"license": extension.license,
 		"categories": _json(extension.categories, []),
-		"icon_url": _absolute_url(extension.icon, base_url),
+		"icon": _absolute_url(extension.icon, base_url),
 		"status": extension.status,
 		"replacement": extension.replacement or None,
 	}
@@ -317,10 +325,20 @@ def _extension_fields() -> list[str]:
 def _protocol_version(value) -> int:
 	try:
 		value = int(value)
-	except TypeError, ValueError:
+	except (TypeError, ValueError):
 		frappe.throw(_("protocol_version must be a positive integer."))
 	if value < 1 or value > 2_147_483_647:
 		frappe.throw(_("protocol_version must be a positive integer."))
+	return value
+
+
+def _page(value) -> int:
+	try:
+		value = int(value)
+	except (TypeError, ValueError):
+		frappe.throw(_("page must be a positive integer."))
+	if value < 1:
+		frappe.throw(_("page must be a positive integer."))
 	return value
 
 
