@@ -18,7 +18,7 @@ MANUAL_CHECK_INTERVAL = 15 * 60
 def check_releases() -> None:
 	"""Hourly scheduler entry: queue one deduplicated job for each active listing."""
 	for extension in frappe.get_all(
-		"Builder Hub Extension",
+		"Hub Extension",
 		filters={"status": ("in", ["Published", "Deprecated"])},
 		fields=["name", "github_repository_id"],
 		ignore_permissions=True,
@@ -28,7 +28,7 @@ def check_releases() -> None:
 
 def enqueue_repository_check(extension_name: str, repository_id: str | None = None):
 	repository_id = repository_id or frappe.db.get_value(
-		"Builder Hub Extension", extension_name, "github_repository_id"
+		"Hub Extension", extension_name, "github_repository_id"
 	)
 	if not repository_id:
 		return None
@@ -46,10 +46,10 @@ def enqueue_repository_check(extension_name: str, repository_id: str | None = No
 def check_repository(extension_name: str, *, client: GitHubClient | None = None) -> dict:
 	"""Check one stable repository ID and import every new declared release."""
 	_metric("checks")
-	extension = frappe.get_doc("Builder Hub Extension", extension_name)
+	extension = frappe.get_doc("Hub Extension", extension_name)
 	if extension.status not in {"Published", "Deprecated"}:
 		return {"extension": extension.name, "checked": False, "reason": "inactive_listing"}
-	publisher = frappe.get_doc("Builder Hub Publisher", extension.publisher)
+	publisher = frappe.get_doc("Hub Publisher", extension.publisher)
 	if publisher.status != "Active":
 		return {"extension": extension.name, "checked": False, "reason": "inactive_publisher"}
 
@@ -66,7 +66,7 @@ def check_repository(extension_name: str, *, client: GitHubClient | None = None)
 		imported = []
 		for version, release_data in get_release_index(response.data or []).items():
 			existing_status = frappe.db.get_value(
-				"Builder Hub Extension Release", f"{extension.name}@{version}", "status"
+				"Hub Extension Release", f"{extension.name}@{version}", "status"
 			)
 			if existing_status in {"Published", "Pending Review", "Yanked", "Blocked"}:
 				continue
@@ -110,7 +110,7 @@ def get_release_index(releases: list[dict]) -> dict[str, dict]:
 def request_release_check(extension_name: str) -> dict:
 	if not is_maintainer():
 		frappe.throw(_("A Builder Hub maintainer must request a release check."), frappe.PermissionError)
-	extension = frappe.get_doc("Builder Hub Extension", extension_name)
+	extension = frappe.get_doc("Hub Extension", extension_name)
 	key = f"builder_hub:extensions:manual_check:{extension.name}"
 	if frappe.cache.get_value(key):
 		frappe.throw(_("A release check was requested recently. Try again later."))

@@ -4,7 +4,7 @@ The site configuration key `builder_hub_github_token` should contain a fine-grai
 
 ## Failed imports
 
-1. Open the `Builder Hub Extension Release` record.
+1. Open the `Hub Extension Release` record.
 2. Read `validation_errors`. Each entry contains a stable code and an author-facing message.
 3. Confirm that the repository is public, active, owned by the publisher account ID, and contains `manifest.json`, `README.md`, `LICENSE`, and `versions.json` on its default branch.
 4. Confirm that the published GitHub release has the exact SemVer tag and exactly one correctly named `.builderext` asset.
@@ -20,4 +20,4 @@ The Redis counters under `builder_hub:extensions:metrics:*` track checks, check 
 - Block a listing when every release is unsafe.
 - Block a publisher when every owned listing is unsafe.
 
-Each action requires a Builder Hub maintainer and creates a `Builder Hub Extension Audit` record. Never delete a published release. After a stop, verify it with `get_release_status`; catalog caches are cleared by the state-change action.
+Each action requires a Builder Hub maintainer and creates a `Hub Extension Audit` record. Never delete a published release. After a stop, verify it with `get_release_status`; catalog caches are cleared by the state-change action.

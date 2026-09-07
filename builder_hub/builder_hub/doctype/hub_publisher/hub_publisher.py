@@ -10,7 +10,7 @@ from frappe.model.document import Document
 PUBLISHER_ID_PATTERN = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 
 
-class BuilderHubPublisher(Document):
+class HubPublisher(Document):
 	def validate(self):
 		if not PUBLISHER_ID_PATTERN.fullmatch(self.publisher_id or ""):
 			frappe.throw(_("Publisher ID must contain lowercase letters, numbers, and hyphens only."))

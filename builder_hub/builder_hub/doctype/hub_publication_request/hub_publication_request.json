@@ -55,12 +55,12 @@
   {"fieldname": "review_reason", "fieldtype": "Small Text", "label": "Review Reason", "read_only": 1},
   {"fieldname": "reviewed_by", "fieldtype": "Link", "label": "Reviewed By", "options": "User", "read_only": 1},
   {"fieldname": "reviewed_on", "fieldtype": "Datetime", "label": "Reviewed On", "read_only": 1},
-  {"fieldname": "published_extension", "fieldtype": "Link", "label": "Published Extension", "options": "Builder Hub Extension", "read_only": 1},
-  {"fieldname": "published_release", "fieldtype": "Link", "label": "Published Release", "options": "Builder Hub Extension Release", "read_only": 1}
+  {"fieldname": "published_extension", "fieldtype": "Link", "label": "Published Extension", "options": "Hub Extension", "read_only": 1},
+  {"fieldname": "published_release", "fieldtype": "Link", "label": "Published Release", "options": "Hub Extension Release", "read_only": 1}
  ],
  "index_web_pages_for_search": 0,
  "module": "Builder Hub",
- "name": "Builder Hub Publication Request",
+ "name": "Hub Publication Request",
  "permissions": [
   {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},
   {"create": 1, "delete": 1, "read": 1, "role": "Builder Hub Maintainer", "write": 1}

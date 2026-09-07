@@ -39,7 +39,7 @@ def get_catalog(protocol_version: int | str = 1) -> dict:
 def _get_catalog(protocol_version: int, base_url: str) -> dict:
 	items = []
 	for extension in frappe.get_all(
-		"Builder Hub Extension",
+		"Hub Extension",
 		filters={"status": ("in", ["Published", "Deprecated"])},
 		fields=_extension_fields(),
 		order_by="extension_name asc",
@@ -62,7 +62,7 @@ def get_extension(extension_name: str, protocol_version: int | str = 1) -> dict:
 	if not publisher or publisher.status != "Active":
 		_not_found()
 	releases = frappe.get_all(
-		"Builder Hub Extension Release",
+		"Hub Extension Release",
 		filters={
 			"extension": extension.name,
 			"status": "Published",
@@ -109,9 +109,9 @@ def get_extension_release(extension_name: str, version: str) -> dict:
 	if not publisher or publisher.status != "Active":
 		_not_found()
 	name = f"{extension_name}@{version}"
-	if not frappe.db.exists("Builder Hub Extension Release", name):
+	if not frappe.db.exists("Hub Extension Release", name):
 		_not_found()
-	release = frappe.get_doc("Builder Hub Extension Release", name)
+	release = frappe.get_doc("Hub Extension Release", name)
 	if release.status != "Published":
 		frappe.throw(_("This release is not available for installation."), frappe.PermissionError)
 	return {
@@ -146,13 +146,13 @@ def get_release_status(releases: list[dict] | str) -> dict:
 		version = identity.get("version")
 		_validate_identity(extension_name, version)
 		extension = frappe.db.get_value(
-			"Builder Hub Extension",
+			"Hub Extension",
 			extension_name,
 			["name", "publisher", "status", "replacement"],
 			as_dict=True,
 		)
 		release = frappe.db.get_value(
-			"Builder Hub Extension Release",
+			"Hub Extension Release",
 			f"{extension_name}@{version}",
 			["status"],
 			as_dict=True,
@@ -160,7 +160,7 @@ def get_release_status(releases: list[dict] | str) -> dict:
 		found = bool(extension and release)
 		extension_status = extension.status if extension else None
 		if extension:
-			publisher_status = frappe.db.get_value("Builder Hub Publisher", extension.publisher, "status")
+			publisher_status = frappe.db.get_value("Hub Publisher", extension.publisher, "status")
 			if publisher_status == "Blocked":
 				extension_status = "Blocked"
 		results.append(
@@ -236,7 +236,7 @@ def _public_extension(extension_name: str):
 	if not isinstance(extension_name, str) or not EXTENSION_NAME_PATTERN.fullmatch(extension_name):
 		_not_found()
 	row = frappe.db.get_value(
-		"Builder Hub Extension",
+		"Hub Extension",
 		extension_name,
 		_extension_fields(),
 		as_dict=True,
@@ -248,7 +248,7 @@ def _public_extension(extension_name: str):
 
 def _latest_release(extension_name: str, protocol_version: int):
 	releases = frappe.get_all(
-		"Builder Hub Extension Release",
+		"Hub Extension Release",
 		filters={
 			"extension": extension_name,
 			"status": "Published",
@@ -290,7 +290,7 @@ def _catalog_item(extension, publisher, release, base_url: str, *, include_lates
 
 def _publisher(name: str):
 	return frappe.db.get_value(
-		"Builder Hub Publisher",
+		"Hub Publisher",
 		name,
 		["publisher_id", "display_name", "verified", "status"],
 		as_dict=True,

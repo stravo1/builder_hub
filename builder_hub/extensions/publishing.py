@@ -51,8 +51,8 @@ def import_release(
 	release_data: dict | None = None,
 ):
 	"""Idempotently validate and record one exact GitHub release."""
-	extension = frappe.get_doc("Builder Hub Extension", extension_name)
-	publisher = frappe.get_doc("Builder Hub Publisher", extension.publisher)
+	extension = frappe.get_doc("Hub Extension", extension_name)
+	publisher = frappe.get_doc("Hub Publisher", extension.publisher)
 	release = _get_or_create_release(extension.name, version)
 	if release.status in {"Published", "Yanked", "Blocked"}:
 		return _reuse_immutable_release(release, release_data)
@@ -98,7 +98,7 @@ def import_validated_release(
 	first_release: bool = False,
 ):
 	"""Store a release that was validated in the current request."""
-	extension = frappe.get_doc("Builder Hub Extension", extension_name)
+	extension = frappe.get_doc("Hub Extension", extension_name)
 	release = _get_or_create_release(extension.name, validated_import.package.manifest["version"])
 	if release.status in {"Published", "Yanked", "Blocked"}:
 		return release
@@ -201,8 +201,8 @@ def _failure_metric(error_code: str, transient: bool) -> str:
 
 def approve_first_release(release_name: str) -> dict:
 	_require_maintainer()
-	release = frappe.get_doc("Builder Hub Extension Release", release_name)
-	extension = frappe.get_doc("Builder Hub Extension", release.extension)
+	release = frappe.get_doc("Hub Extension Release", release_name)
+	extension = frappe.get_doc("Hub Extension", release.extension)
 	if release.status != "Pending Review" or extension.status != "Pending Review":
 		frappe.throw(_("Only a pending first release can be published."))
 	_set_status(extension, "Published")
@@ -216,7 +216,7 @@ def reject_first_release(release_name: str, reason: str) -> dict:
 	_require_maintainer()
 	if not reason or not reason.strip():
 		frappe.throw(_("A rejection reason is required."))
-	release = frappe.get_doc("Builder Hub Extension Release", release_name)
+	release = frappe.get_doc("Hub Extension Release", release_name)
 	if release.status != "Pending Review":
 		frappe.throw(_("Only a pending release can be rejected."))
 	release.validation_errors = frappe.as_json([{"code": "maintainer_rejected", "message": reason.strip()}])
@@ -226,7 +226,7 @@ def reject_first_release(release_name: str, reason: str) -> dict:
 
 def yank_release(release_name: str) -> dict:
 	_require_maintainer()
-	release = frappe.get_doc("Builder Hub Extension Release", release_name)
+	release = frappe.get_doc("Hub Extension Release", release_name)
 	if release.status != "Published":
 		frappe.throw(_("Only a published release can be yanked."))
 	_set_status(release, "Yanked", save=True)
@@ -236,7 +236,7 @@ def yank_release(release_name: str) -> dict:
 
 def block_release(release_name: str) -> dict:
 	_require_maintainer()
-	release = frappe.get_doc("Builder Hub Extension Release", release_name)
+	release = frappe.get_doc("Hub Extension Release", release_name)
 	_set_status(release, "Blocked", save=True)
 	clear_public_caches()
 	return {"release": release.name, "status": release.status}
@@ -244,12 +244,12 @@ def block_release(release_name: str) -> dict:
 
 def block_extension(extension_name: str) -> dict:
 	_require_maintainer()
-	extension = frappe.get_doc("Builder Hub Extension", extension_name)
+	extension = frappe.get_doc("Hub Extension", extension_name)
 	_set_status(extension, "Blocked")
 	for release_name in frappe.get_all(
-		"Builder Hub Extension Release", filters={"extension": extension.name}, pluck="name"
+		"Hub Extension Release", filters={"extension": extension.name}, pluck="name"
 	):
-		release = frappe.get_doc("Builder Hub Extension Release", release_name)
+		release = frappe.get_doc("Hub Extension Release", release_name)
 		_set_status(release, "Blocked", save=True)
 	clear_public_caches()
 	return {"extension": extension.name, "status": extension.status}
@@ -257,10 +257,10 @@ def block_extension(extension_name: str) -> dict:
 
 def block_publisher(publisher_id: str) -> dict:
 	_require_maintainer()
-	publisher = frappe.get_doc("Builder Hub Publisher", publisher_id)
+	publisher = frappe.get_doc("Hub Publisher", publisher_id)
 	_set_status(publisher, "Blocked")
 	for extension_name in frappe.get_all(
-		"Builder Hub Extension", filters={"publisher": publisher.name}, pluck="name"
+		"Hub Extension", filters={"publisher": publisher.name}, pluck="name"
 	):
 		block_extension(extension_name)
 	clear_public_caches()
@@ -299,7 +299,7 @@ def _apply_validated_release(
 	if first_release:
 		release.status = "Pending Review"
 	else:
-		extension_status = frappe.db.get_value("Builder Hub Extension", release.extension, "status")
+		extension_status = frappe.db.get_value("Hub Extension", release.extension, "status")
 		if extension_status not in {"Published", "Deprecated"}:
 			raise ProtocolValidationError(
 				"listing_not_published", "Later releases require a published listing."
@@ -359,8 +359,8 @@ def _assert_unchanged_asset(release, release_data: dict, asset: dict) -> None:
 
 def _get_or_create_release(extension_name: str, version: str):
 	name = f"{extension_name}@{version}"
-	if frappe.db.exists("Builder Hub Extension Release", name):
-		release = frappe.get_doc("Builder Hub Extension Release", name)
+	if frappe.db.exists("Hub Extension Release", name):
+		release = frappe.get_doc("Hub Extension Release", name)
 		if not release.published_on:
 			release.status = "Validating"
 			release.validation_errors = frappe.as_json([])
@@ -368,7 +368,7 @@ def _get_or_create_release(extension_name: str, version: str):
 		return release
 	return frappe.get_doc(
 		{
-			"doctype": "Builder Hub Extension Release",
+			"doctype": "Hub Extension Release",
 			"extension": extension_name,
 			"version": version,
 			"protocol_version": 1,

@@ -1,4 +1,4 @@
-frappe.ui.form.on("Builder Hub Publication Request", {
+frappe.ui.form.on("Hub Publication Request", {
 	refresh(form) {
 		if (form.is_new() || form.doc.status !== "Pending Review") {
 			return;

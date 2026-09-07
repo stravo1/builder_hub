@@ -17,7 +17,7 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 		self.readme = "README <script>bad()</script> [bad](javascript:alert(1))"
 		frappe.get_doc(
 			{
-				"doctype": "Builder Hub Publisher",
+				"doctype": "Hub Publisher",
 				"publisher_id": self.publisher_id,
 				"display_name": "Test Publisher",
 				"github_owner": self.publisher_id,
@@ -28,7 +28,7 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 		).insert(ignore_permissions=True)
 		frappe.get_doc(
 			{
-				"doctype": "Builder Hub Extension",
+				"doctype": "Hub Extension",
 				"extension_name": self.extension_name,
 				"publisher": self.publisher_id,
 				"label": "Icon Library",
@@ -49,9 +49,9 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 
 	def tearDown(self):
 		frappe.set_user("Administrator")
-		frappe.db.delete("Builder Hub Extension Release", {"extension": self.extension_name})
-		frappe.db.delete("Builder Hub Extension", self.extension_name)
-		frappe.db.delete("Builder Hub Publisher", self.publisher_id)
+		frappe.db.delete("Hub Extension Release", {"extension": self.extension_name})
+		frappe.db.delete("Hub Extension", self.extension_name)
+		frappe.db.delete("Hub Publisher", self.publisher_id)
 		api._get_catalog.clear_cache()
 
 	def _release(self, version, protocol_version, manifest="default"):
@@ -70,7 +70,7 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 		)
 		return frappe.get_doc(
 			{
-				"doctype": "Builder Hub Extension Release",
+				"doctype": "Hub Extension Release",
 				"extension": self.extension_name,
 				"version": version,
 				"protocol_version": protocol_version,
@@ -114,7 +114,7 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 		response = api.get_release_status([{"extension_name": self.extension_name, "version": "1.2.0"}])
 		self.assertTrue(response["releases"][0]["found"])
 		self.assertEqual(response["releases"][0]["release_status"], "Yanked")
-		frappe.db.set_value("Builder Hub Publisher", self.publisher_id, "status", "Blocked")
+		frappe.db.set_value("Hub Publisher", self.publisher_id, "status", "Blocked")
 		response = api.get_release_status([{"extension_name": self.extension_name, "version": "1.2.0"}])
 		self.assertEqual(response["releases"][0]["extension_status"], "Blocked")
 
@@ -123,7 +123,7 @@ class ExtensionAPIRecordTests(IntegrationTestCase):
 			api.get_release_status([{"extension_name": self.extension_name, "version": "1.2.0"}] * 101)
 
 	def test_published_release_metadata_is_immutable_but_status_can_change(self):
-		release = frappe.get_doc("Builder Hub Extension Release", self.release_120.name)
+		release = frappe.get_doc("Hub Extension Release", self.release_120.name)
 		release.package_url += "?changed=1"
 		with self.assertRaises(frappe.ValidationError):
 			release.save(ignore_permissions=True)

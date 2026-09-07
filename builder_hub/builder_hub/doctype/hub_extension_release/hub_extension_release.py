@@ -24,7 +24,7 @@ IMMUTABLE_FIELDS = (
 )
 
 
-class BuilderHubExtensionRelease(Document):
+class HubExtensionRelease(Document):
 	def autoname(self):
 		self.name = f"{self.extension}@{self.version}"
 

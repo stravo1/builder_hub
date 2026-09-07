@@ -9,7 +9,7 @@ from frappe.model.document import Document
 from builder_hub.extensions.protocol import EXTENSION_NAME_PATTERN
 
 
-class BuilderHubExtension(Document):
+class HubExtension(Document):
 	def validate(self):
 		if not EXTENSION_NAME_PATTERN.fullmatch(self.extension_name or ""):
 			frappe.throw(_("Extension name must use the lowercase publisher/name format."))

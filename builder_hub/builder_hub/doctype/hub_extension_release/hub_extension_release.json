@@ -20,7 +20,7 @@
   "status"
  ],
  "fields": [
-  {"fieldname": "extension", "fieldtype": "Link", "in_list_view": 1, "label": "Extension", "options": "Builder Hub Extension", "reqd": 1},
+  {"fieldname": "extension", "fieldtype": "Link", "in_list_view": 1, "label": "Extension", "options": "Hub Extension", "reqd": 1},
   {"fieldname": "version", "fieldtype": "Data", "in_list_view": 1, "label": "Version", "reqd": 1},
   {"fieldname": "protocol_version", "fieldtype": "Int", "label": "Protocol Version", "reqd": 1},
   {"fieldname": "manifest", "fieldtype": "JSON", "label": "Manifest"},
@@ -36,7 +36,7 @@
   {"default": "Validating", "fieldname": "status", "fieldtype": "Select", "in_list_view": 1, "label": "Status", "options": "Validating\nPending Review\nPublished\nRejected\nYanked\nBlocked", "reqd": 1}
  ],
  "module": "Builder Hub",
- "name": "Builder Hub Extension Release",
+ "name": "Hub Extension Release",
  "permissions": [
   {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},
   {"create": 1, "delete": 1, "read": 1, "role": "Builder Hub Maintainer", "write": 1}

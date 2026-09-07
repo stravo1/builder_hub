@@ -24,7 +24,7 @@
  ],
  "index_web_pages_for_search": 0,
  "module": "Builder Hub",
- "name": "Builder Hub Publisher",
+ "name": "Hub Publisher",
  "naming_rule": "By fieldname",
  "permissions": [
   {"create": 1, "delete": 1, "read": 1, "role": "System Manager", "write": 1},

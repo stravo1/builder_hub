@@ -32,7 +32,7 @@ class PublishingTests(IntegrationTestCase):
 		self.owner_id = frappe.generate_hash(length=12)
 		frappe.get_doc(
 			{
-				"doctype": "Builder Hub Publisher",
+				"doctype": "Hub Publisher",
 				"publisher_id": self.publisher_id,
 				"display_name": "Import Publisher",
 				"github_owner": self.publisher_id,
@@ -42,7 +42,7 @@ class PublishingTests(IntegrationTestCase):
 		).insert(ignore_permissions=True)
 		frappe.get_doc(
 			{
-				"doctype": "Builder Hub Extension",
+				"doctype": "Hub Extension",
 				"extension_name": self.extension_name,
 				"publisher": self.publisher_id,
 				"label": "Old label",
@@ -59,9 +59,9 @@ class PublishingTests(IntegrationTestCase):
 	def tearDown(self):
 		for path in self.paths:
 			Path(path).unlink(missing_ok=True)
-		frappe.db.delete("Builder Hub Extension Release", {"extension": self.extension_name})
-		frappe.db.delete("Builder Hub Extension", self.extension_name)
-		frappe.db.delete("Builder Hub Publisher", self.publisher_id)
+		frappe.db.delete("Hub Extension Release", {"extension": self.extension_name})
+		frappe.db.delete("Hub Extension", self.extension_name)
+		frappe.db.delete("Hub Publisher", self.publisher_id)
 
 	def manifest(self, version: str, **changes) -> dict:
 		value = {
@@ -147,18 +147,18 @@ class PublishingTests(IntegrationTestCase):
 			"Notes <script>bad()</script> [bad](javascript:alert(1))",
 		)
 		self.assertEqual(
-			frappe.db.get_value("Builder Hub Extension", self.extension_name, "label"), "Imported icons"
+			frappe.db.get_value("Hub Extension", self.extension_name, "label"), "Imported icons"
 		)
 		self.assertEqual(
-			frappe.db.get_value("Builder Hub Extension", self.extension_name, "description"),
+			frappe.db.get_value("Hub Extension", self.extension_name, "description"),
 			"Imported icon package.",
 		)
 		self.assertEqual(
-			frappe.db.get_value("Builder Hub Extension", self.extension_name, "readme"),
+			frappe.db.get_value("Hub Extension", self.extension_name, "readme"),
 			"README <script>bad()</script> [bad](javascript:alert(1))",
 		)
 
-		frappe.db.set_value("Builder Hub Extension", self.extension_name, "status", "Pending Review")
+		frappe.db.set_value("Hub Extension", self.extension_name, "status", "Pending Review")
 		publishing.approve_first_release(first.name)
 		self.assertEqual(frappe.db.get_value(first.doctype, first.name, "status"), "Published")
 
@@ -176,7 +176,7 @@ class PublishingTests(IntegrationTestCase):
 
 	def test_existing_published_release_rejects_changed_asset_identity(self):
 		first = self.import_version("1.0.0", first_release=True)
-		frappe.db.set_value("Builder Hub Extension", self.extension_name, "status", "Pending Review")
+		frappe.db.set_value("Hub Extension", self.extension_name, "status", "Pending Review")
 		publishing.approve_first_release(first.name)
 		changed = self.github_release("1.0.0", asset_id="replacement-asset")
 		with self.assertRaises(ProtocolValidationError) as raised:

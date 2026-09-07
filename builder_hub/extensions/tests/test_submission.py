@@ -78,10 +78,10 @@ class PublicationRequestTests(IntegrationTestCase):
 
 	def tearDown(self):
 		frappe.set_user("Administrator")
-		frappe.db.delete("Builder Hub Extension Release", {"extension": self.extension_name})
-		frappe.db.delete("Builder Hub Extension", self.extension_name)
-		frappe.db.delete("Builder Hub Publication Request", {"extension_name": self.extension_name})
-		frappe.db.delete("Builder Hub Publisher", self.publisher_id)
+		frappe.db.delete("Hub Extension Release", {"extension": self.extension_name})
+		frappe.db.delete("Hub Extension", self.extension_name)
+		frappe.db.delete("Hub Publication Request", {"extension_name": self.extension_name})
+		frappe.db.delete("Hub Publisher", self.publisher_id)
 		api._get_catalog.clear_cache()
 		self.temporary.cleanup()
 
@@ -92,23 +92,23 @@ class PublicationRequestTests(IntegrationTestCase):
 			["design"],
 			client=self.client,
 		)
-		request = frappe.get_doc("Builder Hub Publication Request", result["request"])
+		request = frappe.get_doc("Hub Publication Request", result["request"])
 		self.assertEqual(request.status, "Pending Review")
 		self.assertEqual(request.publisher_id, self.publisher_id)
 		self.assertEqual(request.publisher_name, self.publisher_id)
 		self.assertIn("<script>", request.readme)
-		self.assertFalse(frappe.db.exists("Builder Hub Publisher", self.publisher_id))
-		self.assertFalse(frappe.db.exists("Builder Hub Extension", self.extension_name))
+		self.assertFalse(frappe.db.exists("Hub Publisher", self.publisher_id))
+		self.assertFalse(frappe.db.exists("Hub Extension", self.extension_name))
 
 		frappe.set_user("Administrator")
 		approved = approve_publication_request(request.name, client=self.client)
 		self.assertEqual(approved["status"], "Published")
-		self.assertEqual(frappe.db.get_value("Builder Hub Publisher", self.publisher_id, "status"), "Active")
+		self.assertEqual(frappe.db.get_value("Hub Publisher", self.publisher_id, "status"), "Active")
 		self.assertEqual(
-			frappe.db.get_value("Builder Hub Extension", self.extension_name, "status"), "Published"
+			frappe.db.get_value("Hub Extension", self.extension_name, "status"), "Published"
 		)
 		self.assertEqual(
-			frappe.db.get_value("Builder Hub Publication Request", request.name, "status"), "Approved"
+			frappe.db.get_value("Hub Publication Request", request.name, "status"), "Approved"
 		)
 		catalog = api.get_catalog(1)
 		self.assertIn(self.extension_name, [item["name"] for item in catalog["extensions"]])
@@ -131,7 +131,7 @@ class PublicationRequestTests(IntegrationTestCase):
 	def test_existing_namespace_rejects_a_different_github_owner(self):
 		frappe.get_doc(
 			{
-				"doctype": "Builder Hub Publisher",
+				"doctype": "Hub Publisher",
 				"publisher_id": self.publisher_id,
 				"display_name": "Existing Publisher",
 				"github_owner": "another-owner",
@@ -153,7 +153,7 @@ class PublicationRequestTests(IntegrationTestCase):
 	def test_existing_github_account_keeps_its_publisher_namespace(self):
 		frappe.get_doc(
 			{
-				"doctype": "Builder Hub Publisher",
+				"doctype": "Hub Publisher",
 				"publisher_id": self.publisher_id,
 				"display_name": "Existing Publisher",
 				"github_owner": "previous-login",
@@ -165,7 +165,7 @@ class PublicationRequestTests(IntegrationTestCase):
 		frappe.set_user("Guest")
 
 		result = request_publication(self.repository_url, client=self.client)
-		request = frappe.get_doc("Builder Hub Publication Request", result["request"])
+		request = frappe.get_doc("Hub Publication Request", result["request"])
 
 		self.assertEqual(request.publisher_id, self.publisher_id)
 		self.assertEqual(request.publisher_name, "Existing Publisher")

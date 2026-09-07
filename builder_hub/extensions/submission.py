@@ -112,7 +112,7 @@ def approve_publication_request(
 	client: GitHubClient | None = None,
 ) -> dict:
 	_require_maintainer()
-	request = frappe.get_doc("Builder Hub Publication Request", request_name)
+	request = frappe.get_doc("Hub Publication Request", request_name)
 	if request.status != "Pending Review":
 		frappe.throw(_("Only a pending publication request can be approved."))
 	try:
@@ -145,7 +145,7 @@ def reject_publication_request(request_name: str, reason: str) -> dict:
 	_require_maintainer()
 	if not reason or not reason.strip():
 		frappe.throw(_("A rejection reason is required."))
-	request = frappe.get_doc("Builder Hub Publication Request", request_name)
+	request = frappe.get_doc("Hub Publication Request", request_name)
 	if request.status != "Pending Review":
 		frappe.throw(_("Only a pending publication request can be rejected."))
 	request.status = "Rejected"
@@ -161,7 +161,7 @@ def _create_request(publication: ValidatedPublication):
 	package = release.package
 	return frappe.get_doc(
 		{
-			"doctype": "Builder Hub Publication Request",
+			"doctype": "Hub Publication Request",
 			"repository_url": get_validated_repository_url(publication.repository),
 			"extension_name": package.manifest["name"],
 			"publisher_id": publication.publisher_id,
@@ -188,8 +188,8 @@ def _create_request(publication: ValidatedPublication):
 
 def _create_or_update_publisher(publication: ValidatedPublication):
 	owner = publication.repository["owner"]
-	if frappe.db.exists("Builder Hub Publisher", publication.publisher_id):
-		publisher = frappe.get_doc("Builder Hub Publisher", publication.publisher_id)
+	if frappe.db.exists("Hub Publisher", publication.publisher_id):
+		publisher = frappe.get_doc("Hub Publisher", publication.publisher_id)
 		publisher.github_owner = owner["login"]
 		publisher.verified = 1
 		publisher.status = "Active"
@@ -197,7 +197,7 @@ def _create_or_update_publisher(publication: ValidatedPublication):
 		return publisher
 	return frappe.get_doc(
 		{
-			"doctype": "Builder Hub Publisher",
+			"doctype": "Hub Publisher",
 			"publisher_id": publication.publisher_id,
 			"display_name": publication.publisher_name,
 			"github_owner": owner["login"],
@@ -212,7 +212,7 @@ def _create_listing(publication: ValidatedPublication):
 	manifest = publication.release.package.manifest
 	return frappe.get_doc(
 		{
-			"doctype": "Builder Hub Extension",
+			"doctype": "Hub Extension",
 			"extension_name": manifest["name"],
 			"publisher": publication.publisher_id,
 			"label": manifest["label"],
@@ -233,9 +233,9 @@ def _assert_identity_available(
 ) -> None:
 	extension_name = publication.release.package.manifest["name"]
 	repository_id = str(publication.repository["id"])
-	if frappe.db.exists("Builder Hub Extension", extension_name):
+	if frappe.db.exists("Hub Extension", extension_name):
 		raise ProtocolValidationError("extension_exists", "This extension name has already been used.")
-	if frappe.db.exists("Builder Hub Extension", {"github_repository_id": repository_id}):
+	if frappe.db.exists("Hub Extension", {"github_repository_id": repository_id}):
 		raise ProtocolValidationError(
 			"repository_exists", "This GitHub repository has already been published."
 		)
@@ -243,7 +243,7 @@ def _assert_identity_available(
 		({"extension_name": extension_name}, "A publication request already uses this extension name."),
 		({"github_repository_id": repository_id}, "This GitHub repository was already submitted."),
 	):
-		existing = frappe.db.get_value("Builder Hub Publication Request", filters, "name")
+		existing = frappe.db.get_value("Hub Publication Request", filters, "name")
 		if existing and existing != request_name:
 			raise ProtocolValidationError("request_exists", message)
 
@@ -271,18 +271,18 @@ def _assert_request_unchanged(request, publication: ValidatedPublication) -> Non
 
 def _resolve_publisher(owner_id: str, owner_login: str) -> tuple[str, str]:
 	publisher_id = frappe.db.get_value(
-		"Builder Hub Publisher", {"github_account_id": owner_id}, "publisher_id"
+		"Hub Publisher", {"github_account_id": owner_id}, "publisher_id"
 	)
 	if not publisher_id:
 		publisher_id = owner_login.lower()
-		if frappe.db.exists("Builder Hub Publisher", publisher_id):
+		if frappe.db.exists("Hub Publisher", publisher_id):
 			raise ProtocolValidationError(
 				"publisher_owner_mismatch",
 				"The repository owner belongs to a different GitHub account.",
 			)
 		return publisher_id, owner_login
 
-	publisher = frappe.get_doc("Builder Hub Publisher", publisher_id)
+	publisher = frappe.get_doc("Hub Publisher", publisher_id)
 	if publisher.status == "Blocked":
 		raise ProtocolValidationError("publisher_blocked", "This publisher is blocked.")
 	return publisher.publisher_id, publisher.display_name
