@@ -14,8 +14,11 @@ def store_catalog_icon(content: bytes) -> str:
 	filename = f"{digest}.svg"
 	directory = Path(get_files_path("extension-icons"))
 	directory.mkdir(mode=0o755, parents=True, exist_ok=True)
+	directory.chmod(0o755)
 	path = directory / filename
-	if not path.exists():
+	if path.exists():
+		path.chmod(0o644)
+	else:
 		_write_icon(path, content)
 	return f"/files/extension-icons/{filename}"
 
@@ -25,6 +28,8 @@ def _write_icon(path: Path, content: bytes) -> None:
 		temporary = Path(output.name)
 		output.write(content)
 	try:
+		# NamedTemporaryFile is created 0600; the web server serves this file.
+		temporary.chmod(0o644)
 		temporary.replace(path)
 	finally:
 		if temporary.exists():
