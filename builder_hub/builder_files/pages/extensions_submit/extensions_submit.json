@@ -1,0 +1,977 @@
+{
+ "app": "builder_hub",
+ "authenticated_access": 0,
+ "blocks": [
+  {
+   "baseStyles": {
+    "alignItems": "center",
+    "backgroundColor": "#FFFFFF",
+    "display": "flex",
+    "flexDirection": "column",
+    "fontFamily": "Inter",
+    "width": "100%"
+   },
+   "blockId": "root",
+   "blockName": "Page",
+   "children": [
+    {
+     "baseStyles": {
+      "alignItems": "center",
+      "display": "flex",
+      "flexDirection": "column",
+      "gap": "40px",
+      "justifyContent": "flex-start",
+      "maxWidth": "1040px",
+      "padding": "80px 24px",
+      "width": "100%"
+     },
+     "blockId": "e6443af99d",
+     "blockName": "Container",
+     "children": [
+      {
+       "baseStyles": {
+        "display": "flex",
+        "flexDirection": "column",
+        "gap": "12px",
+        "maxWidth": "800px"
+       },
+       "blockId": "b4e6a31089",
+       "blockName": "Intro",
+       "children": [
+        {
+         "baseStyles": {
+          "color": "#7C7C7C",
+          "fontFamily": "Inter",
+          "fontSize": "13px",
+          "fontWeight": "500",
+          "lineHeight": "1.6",
+          "margin": "0px"
+         },
+         "blockId": "807f691620",
+         "blockName": "Eyebrow",
+         "element": "p",
+         "innerHTML": "Builder Hub · Extensions"
+        },
+        {
+         "baseStyles": {
+          "color": "#171717",
+          "fontFamily": "Inter",
+          "fontSize": "32px",
+          "fontWeight": "600",
+          "letterSpacing": "-0.02em",
+          "lineHeight": "1.2",
+          "margin": "0px"
+         },
+         "blockId": "a3089b7fae",
+         "blockName": "Heading",
+         "element": "h1",
+         "innerHTML": "Publish a Builder extension",
+         "mobileStyles": {
+          "fontSize": "28px"
+         }
+        },
+        {
+         "baseStyles": {
+          "color": "#525252",
+          "fontFamily": "Inter",
+          "fontSize": "16px",
+          "fontWeight": "400",
+          "lineHeight": "1.6",
+          "margin": "0px"
+         },
+         "blockId": "96edb91c33",
+         "blockName": "Intro Text",
+         "element": "p",
+         "innerHTML": "Share your extension with every Builder site. Submit its GitHub repository once. Builder Hub checks it, and a maintainer reviews it before it is listed."
+        }
+       ],
+       "element": "div"
+      },
+      {
+       "baseStyles": {
+        "alignItems": "flex-start",
+        "display": "flex",
+        "flexDirection": "column",
+        "flexWrap": "wrap",
+        "gap": "48px",
+        "maxWidth": "800px"
+       },
+       "blockId": "4f9be057f0",
+       "blockName": "Content",
+       "children": [
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1 1 320px",
+          "flexDirection": "column",
+          "gap": "40px",
+          "minWidth": "0px"
+         },
+         "blockId": "bf073fae64",
+         "blockName": "Guide",
+         "children": [
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "16px"
+           },
+           "blockId": "3caae05fd2",
+           "blockName": "Section · Checklist",
+           "children": [
+            {
+             "baseStyles": {
+              "color": "#171717",
+              "fontFamily": "Inter",
+              "fontSize": "16px",
+              "fontWeight": "600",
+              "lineHeight": "1.6",
+              "margin": "0px"
+             },
+             "blockId": "f1a368494e",
+             "blockName": "Checklist · Heading",
+             "element": "h2",
+             "innerHTML": "Before you submit"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "gap": "12px"
+             },
+             "blockId": "a8ee70e6b9",
+             "blockName": "Checklist 1",
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "#FFFFFF",
+                "border": "1px solid #E2E2E2",
+                "borderRadius": "999px",
+                "color": "#171717",
+                "display": "flex",
+                "flexShrink": 0,
+                "fontFamily": "Inter",
+                "fontSize": "12px",
+                "fontWeight": "600",
+                "height": "24px",
+                "justifyContent": "center",
+                "lineHeight": "1",
+                "margin": "0px",
+                "width": "24px"
+               },
+               "blockId": "bed23ff591",
+               "blockName": "Checklist 1 · Number",
+               "element": "span",
+               "innerHTML": "1"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px"
+               },
+               "blockId": "2dd0232fe2",
+               "blockName": "Checklist 1 · Text",
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "#171717",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "600",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "b4c9ba8a6b",
+                 "blockName": "Checklist 1 · Title",
+                 "element": "p",
+                 "innerHTML": "A public GitHub repository"
+                },
+                {
+                 "baseStyles": {
+                  "color": "#525252",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "400",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "4ebb3f2464",
+                 "blockName": "Checklist 1 · Detail",
+                 "element": "p",
+                 "innerHTML": "With a recognized SPDX license, such as MIT or Apache-2.0."
+                }
+               ],
+               "element": "div"
+              }
+             ],
+             "element": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "gap": "12px"
+             },
+             "blockId": "6b2cc72749",
+             "blockName": "Checklist 2",
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "#FFFFFF",
+                "border": "1px solid #E2E2E2",
+                "borderRadius": "999px",
+                "color": "#171717",
+                "display": "flex",
+                "flexShrink": 0,
+                "fontFamily": "Inter",
+                "fontSize": "12px",
+                "fontWeight": "600",
+                "height": "24px",
+                "justifyContent": "center",
+                "lineHeight": "1",
+                "margin": "0px",
+                "width": "24px"
+               },
+               "blockId": "f98b21db5f",
+               "blockName": "Checklist 2 · Number",
+               "element": "span",
+               "innerHTML": "2"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px"
+               },
+               "blockId": "a2dd6dff5c",
+               "blockName": "Checklist 2 · Text",
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "#171717",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "600",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "881c5d2b88",
+                 "blockName": "Checklist 2 · Title",
+                 "element": "p",
+                 "innerHTML": "Repository files"
+                },
+                {
+                 "baseStyles": {
+                  "color": "#525252",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "400",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "21654d2099",
+                 "blockName": "Checklist 2 · Detail",
+                 "element": "p",
+                 "innerHTML": "<code style=\"font-size: 13px; background: #F8F8F8; border: 1px solid #E2E2E2; border-radius: 4px; padding: 1px 5px; color: #171717; overflow-wrap: anywhere;\">manifest.json</code>, <code style=\"font-size: 13px; background: #F8F8F8; border: 1px solid #E2E2E2; border-radius: 4px; padding: 1px 5px; color: #171717; overflow-wrap: anywhere;\">README.md</code>, and <code style=\"font-size: 13px; background: #F8F8F8; border: 1px solid #E2E2E2; border-radius: 4px; padding: 1px 5px; color: #171717; overflow-wrap: anywhere;\">LICENSE</code> at the root. Add <code style=\"font-size: 13px; background: #F8F8F8; border: 1px solid #E2E2E2; border-radius: 4px; padding: 1px 5px; color: #171717; overflow-wrap: anywhere;\">DESCRIPTION.md</code> to show users a different page than the README."
+                }
+               ],
+               "element": "div"
+              }
+             ],
+             "element": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "gap": "12px"
+             },
+             "blockId": "020ced7a9e",
+             "blockName": "Checklist 3",
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "#FFFFFF",
+                "border": "1px solid #E2E2E2",
+                "borderRadius": "999px",
+                "color": "#171717",
+                "display": "flex",
+                "flexShrink": 0,
+                "fontFamily": "Inter",
+                "fontSize": "12px",
+                "fontWeight": "600",
+                "height": "24px",
+                "justifyContent": "center",
+                "lineHeight": "1",
+                "margin": "0px",
+                "width": "24px"
+               },
+               "blockId": "2a4178e2bb",
+               "blockName": "Checklist 3 · Number",
+               "element": "span",
+               "innerHTML": "3"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px"
+               },
+               "blockId": "571b0e62b2",
+               "blockName": "Checklist 3 · Text",
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "#171717",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "600",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "10a8f951c5",
+                 "blockName": "Checklist 3 · Title",
+                 "element": "p",
+                 "innerHTML": "A manifest name in your namespace"
+                },
+                {
+                 "baseStyles": {
+                  "color": "#525252",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "400",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "40fa2d508c",
+                 "blockName": "Checklist 3 · Detail",
+                 "element": "p",
+                 "innerHTML": "Use the GitHub owner as the namespace, for example <code style=\"font-size: 13px; background: #F8F8F8; border: 1px solid #E2E2E2; border-radius: 4px; padding: 1px 5px; color: #171717; overflow-wrap: anywhere;\">acme/icons</code>."
+                }
+               ],
+               "element": "div"
+              }
+             ],
+             "element": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "gap": "12px"
+             },
+             "blockId": "1e4ec40e19",
+             "blockName": "Checklist 4",
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "#FFFFFF",
+                "border": "1px solid #E2E2E2",
+                "borderRadius": "999px",
+                "color": "#171717",
+                "display": "flex",
+                "flexShrink": 0,
+                "fontFamily": "Inter",
+                "fontSize": "12px",
+                "fontWeight": "600",
+                "height": "24px",
+                "justifyContent": "center",
+                "lineHeight": "1",
+                "margin": "0px",
+                "width": "24px"
+               },
+               "blockId": "e0b742693b",
+               "blockName": "Checklist 4 · Number",
+               "element": "span",
+               "innerHTML": "4"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px"
+               },
+               "blockId": "00847fb59b",
+               "blockName": "Checklist 4 · Text",
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "#171717",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "600",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "f8d45797ec",
+                 "blockName": "Checklist 4 · Title",
+                 "element": "p",
+                 "innerHTML": "A published GitHub release"
+                },
+                {
+                 "baseStyles": {
+                  "color": "#525252",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "400",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "3f5c44bb10",
+                 "blockName": "Checklist 4 · Detail",
+                 "element": "p",
+                 "innerHTML": "Tag it with the manifest version, for example <code style=\"font-size: 13px; background: #F8F8F8; border: 1px solid #E2E2E2; border-radius: 4px; padding: 1px 5px; color: #171717; overflow-wrap: anywhere;\">1.0.0</code>. Attach one <code style=\"font-size: 13px; background: #F8F8F8; border: 1px solid #E2E2E2; border-radius: 4px; padding: 1px 5px; color: #171717; overflow-wrap: anywhere;\">acme-icons-1.0.0.builderext</code> package."
+                }
+               ],
+               "element": "div"
+              }
+             ],
+             "element": "div"
+            }
+           ],
+           "element": "div"
+          },
+          {
+           "baseStyles": {
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "16px"
+           },
+           "blockId": "2921ca1e5f",
+           "blockName": "Section · Next Steps",
+           "children": [
+            {
+             "baseStyles": {
+              "color": "#171717",
+              "fontFamily": "Inter",
+              "fontSize": "16px",
+              "fontWeight": "600",
+              "lineHeight": "1.6",
+              "margin": "0px"
+             },
+             "blockId": "322560d67c",
+             "blockName": "Next Steps · Heading",
+             "element": "h2",
+             "innerHTML": "What happens next"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "gap": "12px"
+             },
+             "blockId": "6bac23c6df",
+             "blockName": "Step 1",
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "#FFFFFF",
+                "border": "1px solid #E2E2E2",
+                "borderRadius": "999px",
+                "color": "#171717",
+                "display": "flex",
+                "flexShrink": 0,
+                "fontFamily": "Inter",
+                "fontSize": "12px",
+                "fontWeight": "600",
+                "height": "24px",
+                "justifyContent": "center",
+                "lineHeight": "1",
+                "margin": "0px",
+                "width": "24px"
+               },
+               "blockId": "849f0f6fd2",
+               "blockName": "Step 1 · Number",
+               "element": "span",
+               "innerHTML": "1"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px"
+               },
+               "blockId": "046d246887",
+               "blockName": "Step 1 · Text",
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "#171717",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "600",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "a10242bdad",
+                 "blockName": "Step 1 · Title",
+                 "element": "p",
+                 "innerHTML": "Automatic checks"
+                },
+                {
+                 "baseStyles": {
+                  "color": "#525252",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "400",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "2ed1d2444a",
+                 "blockName": "Step 1 · Detail",
+                 "element": "p",
+                 "innerHTML": "Builder Hub validates the repository, the release, and the package."
+                }
+               ],
+               "element": "div"
+              }
+             ],
+             "element": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "gap": "12px"
+             },
+             "blockId": "aefbadf917",
+             "blockName": "Step 2",
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "#FFFFFF",
+                "border": "1px solid #E2E2E2",
+                "borderRadius": "999px",
+                "color": "#171717",
+                "display": "flex",
+                "flexShrink": 0,
+                "fontFamily": "Inter",
+                "fontSize": "12px",
+                "fontWeight": "600",
+                "height": "24px",
+                "justifyContent": "center",
+                "lineHeight": "1",
+                "margin": "0px",
+                "width": "24px"
+               },
+               "blockId": "4697034acf",
+               "blockName": "Step 2 · Number",
+               "element": "span",
+               "innerHTML": "2"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px"
+               },
+               "blockId": "5904264126",
+               "blockName": "Step 2 · Text",
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "#171717",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "600",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "995e3ef4c0",
+                 "blockName": "Step 2 · Title",
+                 "element": "p",
+                 "innerHTML": "Maintainer review"
+                },
+                {
+                 "baseStyles": {
+                  "color": "#525252",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "400",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "ee7ca1fd3d",
+                 "blockName": "Step 2 · Detail",
+                 "element": "p",
+                 "innerHTML": "A Builder Hub maintainer approves or rejects the request."
+                }
+               ],
+               "element": "div"
+              }
+             ],
+             "element": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "gap": "12px"
+             },
+             "blockId": "27030a62f7",
+             "blockName": "Step 3",
+             "children": [
+              {
+               "baseStyles": {
+                "alignItems": "center",
+                "backgroundColor": "#FFFFFF",
+                "border": "1px solid #E2E2E2",
+                "borderRadius": "999px",
+                "color": "#171717",
+                "display": "flex",
+                "flexShrink": 0,
+                "fontFamily": "Inter",
+                "fontSize": "12px",
+                "fontWeight": "600",
+                "height": "24px",
+                "justifyContent": "center",
+                "lineHeight": "1",
+                "margin": "0px",
+                "width": "24px"
+               },
+               "blockId": "25d57a0e05",
+               "blockName": "Step 3 · Number",
+               "element": "span",
+               "innerHTML": "3"
+              },
+              {
+               "baseStyles": {
+                "display": "flex",
+                "flexDirection": "column",
+                "gap": "2px"
+               },
+               "blockId": "c21642e4db",
+               "blockName": "Step 3 · Text",
+               "children": [
+                {
+                 "baseStyles": {
+                  "color": "#171717",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "600",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "e1acd41d64",
+                 "blockName": "Step 3 · Title",
+                 "element": "p",
+                 "innerHTML": "Listed in Builder"
+                },
+                {
+                 "baseStyles": {
+                  "color": "#525252",
+                  "fontFamily": "Inter",
+                  "fontSize": "14px",
+                  "fontWeight": "400",
+                  "lineHeight": "1.6",
+                  "margin": "0px"
+                 },
+                 "blockId": "7a2927a20c",
+                 "blockName": "Step 3 · Detail",
+                 "element": "p",
+                 "innerHTML": "Builder sites can install it. New GitHub releases arrive without a new request."
+                }
+               ],
+               "element": "div"
+              }
+             ],
+             "element": "div"
+            }
+           ],
+           "element": "div"
+          }
+         ],
+         "element": "div"
+        },
+        {
+         "baseStyles": {
+          "display": "flex",
+          "flex": "1 1 320px",
+          "flexDirection": "column",
+          "gap": "16px",
+          "minWidth": "0px"
+         },
+         "blockId": "10b265673b",
+         "blockName": "Form Column",
+         "children": [
+          {
+           "baseStyles": {
+            "backgroundColor": "#FFFFFF",
+            "border": "1px solid #E2E2E2",
+            "borderRadius": "12px",
+            "display": "flex",
+            "flexDirection": "column",
+            "gap": "16px",
+            "overflowX": "hidden",
+            "overflowY": "hidden",
+            "padding": "20px 24px"
+           },
+           "blockId": "47106d6da1",
+           "blockName": "Publication Form",
+           "children": [
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "6px"
+             },
+             "blockId": "20951daa10",
+             "blockName": "Field · Repository",
+             "children": [
+              {
+               "attributes": {
+                "for": "repository-url"
+               },
+               "baseStyles": {
+                "color": "#7C7C7C",
+                "fontFamily": "Inter",
+                "fontSize": "14px",
+                "fontWeight": "400",
+                "letterSpacing": "0.02em",
+                "lineHeight": "1.15"
+               },
+               "blockId": "b7a7983298",
+               "blockName": "Field · Repository Label",
+               "element": "label",
+               "innerHTML": "GitHub repository URL <span style=\"color: #E03434;\" aria-hidden=\"true\">*</span>"
+              },
+              {
+               "attributes": {
+                "id": "repository-url",
+                "name": "repository_url",
+                "pattern": "https://github\\.com/[^/]+/[^/]+/?",
+                "placeholder": "https://github.com/acme/builder-extension-icons",
+                "required": "",
+                "type": "url"
+               },
+               "baseStyles": {
+                "backgroundColor": "#F3F3F3",
+                "border": "1px solid #F3F3F3",
+                "borderRadius": "8px",
+                "color": "#171717",
+                "focus:backgroundColor": "#FFFFFF",
+                "focus:borderColor": "#999999",
+                "focus:boxShadow": "inset 0px 0.25px 1.5px 0px #ffffff29, 0px 0px 1px 0px #00000033, 0px 1px 3px 0px #00000024",
+                "fontFamily": "Inter",
+                "fontSize": "14px",
+                "height": "32px",
+                "hover:backgroundColor": "#EDEDED",
+                "hover:borderColor": "#EDEDED",
+                "letterSpacing": "0.02em",
+                "lineHeight": "1.15",
+                "outline": "none",
+                "overflowX": "hidden",
+                "overflowY": "hidden",
+                "padding": "0px 10px",
+                "transition": "color 150ms, background-color 150ms, border-color 150ms",
+                "width": "100%"
+               },
+               "blockId": "9aa0337a8c",
+               "blockName": "Field · Repository Input",
+               "element": "input"
+              },
+              {
+               "baseStyles": {
+                "color": "#7C7C7C",
+                "fontFamily": "Inter",
+                "fontSize": "13px",
+                "fontWeight": "400",
+                "letterSpacing": "0.015em",
+                "lineHeight": "1.5",
+                "margin": "0px"
+               },
+               "blockId": "ddb474a1c6",
+               "blockName": "Field · Repository Help",
+               "element": "p",
+               "innerHTML": "A public repository. Its GitHub owner becomes the publisher."
+              }
+             ],
+             "element": "div"
+            },
+            {
+             "baseStyles": {
+              "display": "flex",
+              "flexDirection": "column",
+              "gap": "6px"
+             },
+             "blockId": "88d6d59879",
+             "blockName": "Field · Categories",
+             "children": [
+              {
+               "attributes": {
+                "for": "categories"
+               },
+               "baseStyles": {
+                "color": "#7C7C7C",
+                "fontFamily": "Inter",
+                "fontSize": "14px",
+                "fontWeight": "400",
+                "letterSpacing": "0.02em",
+                "lineHeight": "1.15"
+               },
+               "blockId": "cf4e641414",
+               "blockName": "Field · Categories Label",
+               "element": "label",
+               "innerHTML": "Categories"
+              },
+              {
+               "attributes": {
+                "id": "categories",
+                "name": "categories",
+                "placeholder": "design, icons",
+                "type": "text"
+               },
+               "baseStyles": {
+                "backgroundColor": "#F3F3F3",
+                "border": "1px solid #F3F3F3",
+                "borderRadius": "8px",
+                "color": "#171717",
+                "focus:backgroundColor": "#FFFFFF",
+                "focus:borderColor": "#999999",
+                "focus:boxShadow": "inset 0px 0.25px 1.5px 0px #ffffff29, 0px 0px 1px 0px #00000033, 0px 1px 3px 0px #00000024",
+                "fontFamily": "Inter",
+                "fontSize": "14px",
+                "height": "32px",
+                "hover:backgroundColor": "#EDEDED",
+                "hover:borderColor": "#EDEDED",
+                "letterSpacing": "0.02em",
+                "lineHeight": "1.15",
+                "outline": "none",
+                "overflowX": "hidden",
+                "overflowY": "hidden",
+                "padding": "0px 10px",
+                "transition": "color 150ms, background-color 150ms, border-color 150ms",
+                "width": "100%"
+               },
+               "blockId": "85dad59742",
+               "blockName": "Field · Categories Input",
+               "element": "input"
+              },
+              {
+               "baseStyles": {
+                "color": "#7C7C7C",
+                "fontFamily": "Inter",
+                "fontSize": "13px",
+                "fontWeight": "400",
+                "letterSpacing": "0.015em",
+                "lineHeight": "1.5",
+                "margin": "0px"
+               },
+               "blockId": "58efd033c0",
+               "blockName": "Field · Categories Help",
+               "element": "p",
+               "innerHTML": "Optional. Comma-separated lowercase IDs."
+              }
+             ],
+             "element": "div"
+            },
+            {
+             "attributes": {
+              "type": "submit"
+             },
+             "baseStyles": {
+              "active:backgroundColor": "#525252",
+              "alignItems": "center",
+              "backgroundColor": "#171717",
+              "border": "none",
+              "borderRadius": "8px",
+              "color": "#FFFFFF",
+              "cursor": "pointer",
+              "display": "inline-flex",
+              "focus-visible:outline": "2px solid #c9c9c9e5",
+              "focus-visible:outlineOffset": "0px",
+              "fontFamily": "Inter",
+              "fontSize": "14px",
+              "fontWeight": "500",
+              "gap": "8px",
+              "height": "32px",
+              "hover:backgroundColor": "#383838",
+              "justifyContent": "center",
+              "letterSpacing": "0.015em",
+              "overflowX": "hidden",
+              "overflowY": "hidden",
+              "padding": "0px 10px",
+              "transition": "color 150ms, background-color 150ms, border-color 150ms",
+              "width": "100%"
+             },
+             "blockId": "3930f60d6f",
+             "blockName": "Submit Button",
+             "element": "button",
+             "innerHTML": "Request publication"
+            },
+            {
+             "attributes": {
+              "data-publication-result": "",
+              "role": "status"
+             },
+             "baseStyles": {
+              "alignItems": "start",
+              "borderRadius": "10px",
+              "color": "#0F0F0F",
+              "display": "none",
+              "fontFamily": "Inter",
+              "fontSize": "14px",
+              "gap": "12px",
+              "gridTemplateColumns": "auto 1fr",
+              "letterSpacing": "0.02em",
+              "lineHeight": "1.4",
+              "padding": "14px 16px"
+             },
+             "blockId": "5134fa7b1a",
+             "blockName": "Publication Result",
+             "element": "div"
+            }
+           ],
+           "clientScript": {
+            "css": "input::placeholder { color: #999999; }",
+            "js": "const form = this;\nconst button = form.querySelector(\"button[type=submit]\");\nconst result = form.querySelector(\"[data-publication-result]\");\nconst label = button.innerHTML;\nconst spinner = `<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M21 12a9 9 0 1 1-6.2-8.56\"/></svg>`;\nconst icons = {\n\tsuccess: `<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#43AC79\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m9 12 2 2 4-4\"/></svg>`,\n\terror: `<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#E03434\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><path d=\"m15 9-6 6\"/><path d=\"m9 9 6 6\"/></svg>`,\n};\n\nfunction setBusy(isBusy) {\n\tbutton.disabled = isBusy;\n\tbutton.style.pointerEvents = isBusy ? \"none\" : \"\";\n\tbutton.innerHTML = isBusy ? `${spinner}<span>Checking repository…</span>` : label;\n\tif (isBusy) {\n\t\tbutton.querySelector(\"svg\").animate(\n\t\t\t[{ transform: \"rotate(0deg)\" }, { transform: \"rotate(360deg)\" }],\n\t\t\t{ duration: 800, iterations: Infinity },\n\t\t);\n\t}\n}\n\nfunction showResult(message, isError) {\n\tconst text = document.createElement(\"span\");\n\ttext.textContent = message;\n\tresult.innerHTML = icons[isError ? \"error\" : \"success\"];\n\tresult.append(text);\n\tresult.style.display = \"grid\";\n\tresult.style.backgroundColor = isError ? \"#FFE7E7\" : \"#E4FAEB\";\n}\n\nfunction getErrorMessage(body) {\n\ttry {\n\t\treturn JSON.parse(JSON.parse(body._server_messages)[0]).message;\n\t} catch (error) {\n\t\treturn \"The publication request could not be submitted.\";\n\t}\n}\n\nform.addEventListener(\"submit\", async (event) => {\n\tevent.preventDefault();\n\tconst data = new FormData(form);\n\tconst categories = String(data.get(\"categories\") || \"\")\n\t\t.split(\",\")\n\t\t.map((category) => category.trim())\n\t\t.filter(Boolean);\n\tsetBusy(true);\n\tresult.style.display = \"none\";\n\ttry {\n\t\tconst response = await fetch(\"/api/method/builder_hub.extensions.api.request_publication\", {\n\t\t\tmethod: \"POST\",\n\t\t\theaders: {\n\t\t\t\t\"Content-Type\": \"application/json\",\n\t\t\t\t\"X-Frappe-CSRF-Token\": frappe.csrf_token || \"\",\n\t\t\t},\n\t\t\tbody: JSON.stringify({\n\t\t\t\trepository_url: data.get(\"repository_url\"),\n\t\t\t\tcategories: JSON.stringify(categories),\n\t\t\t}),\n\t\t});\n\t\tconst body = await response.json();\n\t\tif (!response.ok) throw new Error(getErrorMessage(body));\n\t\tshowResult(`Request received for ${body.message.extension_name}. A maintainer will review it.`, false);\n\t\tform.reset();\n\t} catch (error) {\n\t\tshowResult(error.message, true);\n\t} finally {\n\t\tsetBusy(false);\n\t}\n});"
+           },
+           "element": "form",
+           "mobileStyles": {
+            "padding": "16px"
+           }
+          }
+         ],
+         "element": "div"
+        }
+       ],
+       "element": "div",
+       "mobileStyles": {
+        "gap": "40px"
+       }
+      }
+     ],
+     "element": "div",
+     "mobileStyles": {
+      "padding": "48px 16px"
+     }
+    }
+   ],
+   "draggable": false,
+   "element": "div",
+   "originalElement": "body"
+  }
+ ],
+ "client_scripts": [],
+ "creation": "2026-09-24 17:29:04.019563",
+ "disable_indexing": 0,
+ "docstatus": 0,
+ "doctype": "Builder Page",
+ "draft_blocks": null,
+ "dynamic_route": 0,
+ "idx": 0,
+ "is_standard": 0,
+ "is_template": 0,
+ "meta_description": "Submit a public GitHub repository to publish a Builder extension on Builder Hub.",
+ "modified": "2026-09-24 17:52:57.599471",
+ "modified_by": "Administrator",
+ "name": "extensions-submit",
+ "owner": "Administrator",
+ "page_name": "extensions-submit",
+ "page_title": "Publish a Builder extension",
+ "preview": "/files/extensions-submit-preview.webp?v=4b6a6",
+ "project_folder": "builder_hub",
+ "published": 1,
+ "published_at": "2026-09-24 17:47:43.271675",
+ "route": "extensions/submit"
+}
