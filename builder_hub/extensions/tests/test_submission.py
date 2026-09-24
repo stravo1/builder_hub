@@ -11,7 +11,7 @@ import frappe
 from frappe.tests import IntegrationTestCase
 
 from builder_hub.extensions import api
-from builder_hub.extensions.protocol import expected_package_name
+from builder_hub.extensions.protocol import ProtocolValidationError, expected_package_name
 from builder_hub.extensions.submission import (
 	approve_publication_request,
 	reject_publication_request,
@@ -30,6 +30,10 @@ class PublicationClient:
 		return self.repository
 
 	def get_repository_file(self, repository: dict, path: str) -> bytes:
+		if path not in self.files:
+			raise ProtocolValidationError("github_not_found", "GitHub API request failed with HTTP 404.")
+		if isinstance(self.files[path], ProtocolValidationError):
+			raise self.files[path]
 		return self.files[path]
 
 	def get_release(self, repository: dict, version: str) -> dict:
@@ -112,6 +116,20 @@ class PublicationRequestTests(IntegrationTestCase):
 		)
 		catalog = api.get_catalog(1)
 		self.assertIn(self.extension_name, [item["name"] for item in catalog["extensions"]])
+
+	def test_description_file_replaces_the_readme(self):
+		self.client.files["DESCRIPTION.md"] = b"Pick an icon."
+		frappe.set_user("Guest")
+		result = request_publication(self.repository_url, client=self.client)
+		self.assertEqual(frappe.db.get_value("Hub Publication Request", result["request"], "readme"), "Pick an icon.")
+
+	def test_github_failure_is_not_read_as_a_missing_description(self):
+		self.client.files["DESCRIPTION.md"] = ProtocolValidationError(
+			"github_request_failed", "GitHub API request failed with HTTP 502."
+		)
+		frappe.set_user("Guest")
+		with self.assertRaisesRegex(frappe.ValidationError, "HTTP 502"):
+			request_publication(self.repository_url, client=self.client)
 
 	def test_duplicate_repository_request_is_rejected(self):
 		frappe.set_user("Guest")

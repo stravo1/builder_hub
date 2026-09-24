@@ -322,9 +322,10 @@ def get_repository_contract(client: GitHubClient, repository: dict, license_id: 
 			"invalid_repository_json", "Repository manifest.json must contain UTF-8 JSON."
 		)
 	_validate_repository_license(repository, license_id, files["LICENSE"])
+	readme = _get_description_file(client, repository) or files["README.md"]
 	return {
 		"manifest": manifest,
-		"readme": files["README.md"].decode("utf-8", errors="replace"),
+		"readme": readme.decode("utf-8", errors="replace"),
 	}
 
 
@@ -357,6 +358,16 @@ def _get_required_repository_files(client: GitHubClient, repository: dict) -> di
 				)
 			raise
 	return files
+
+
+def _get_description_file(client: GitHubClient, repository: dict) -> bytes | None:
+	"""The optional DESCRIPTION.md, which authors write for users when the README is for developers."""
+	try:
+		return client.get_repository_file(repository, "DESCRIPTION.md")
+	except ProtocolValidationError as error:
+		if error.code == "github_not_found":
+			return None
+		raise
 
 
 def _validate_repository_license(repository: dict, license_id: str, license_content: bytes) -> None:
