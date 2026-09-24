@@ -23,6 +23,7 @@ from builder_hub.extensions.protocol import (
 
 TRANSIENT_ERROR_CODES = frozenset(
 	{
+		"github_not_found",
 		"github_rate_limited",
 		"github_request_failed",
 		"github_response_too_large",

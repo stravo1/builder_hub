@@ -84,6 +84,14 @@ class GitHubClientTests(UnitTestCase):
 			client.download_asset("https://github.com/acme/package.builderext")
 		self.assertEqual(raised.exception.code, "unsafe_package_url")
 
+	def test_missing_file_has_its_own_error_code(self):
+		response = FakeResponse(status_code=404)
+		client = GitHubClient(token="secret", session=FakeSession(response))
+		repository = {"owner": {"login": "acme"}, "name": "icons"}
+		with self.assertRaises(ProtocolValidationError) as raised:
+			client.get_repository_file(repository, "DESCRIPTION.md")
+		self.assertEqual(raised.exception.code, "github_not_found")
+
 	def test_rate_limit_has_stable_error_code(self):
 		response = FakeResponse(
 			status_code=403,

@@ -214,6 +214,9 @@ def _validate_asset_response(response) -> None:
 def _validate_api_response(response) -> None:
 	if response.status_code == 403 and response.headers.get("X-RateLimit-Remaining") == "0":
 		raise ProtocolValidationError("github_rate_limited", "GitHub API rate limit was reached.")
+	# its own code, so an optional file can tell "not there" from "GitHub failed"
+	if response.status_code == 404:
+		raise ProtocolValidationError("github_not_found", "GitHub API request failed with HTTP 404.")
 	if response.status_code != 200:
 		raise ProtocolValidationError(
 			"github_request_failed", f"GitHub API request failed with HTTP {response.status_code}."
@@ -348,7 +351,7 @@ def _get_required_repository_files(client: GitHubClient, repository: dict) -> di
 		try:
 			files[name] = client.get_repository_file(repository, name)
 		except ProtocolValidationError as error:
-			if error.code == "github_request_failed":
+			if error.code in ("github_request_failed", "github_not_found"):
 				raise ProtocolValidationError(
 					"missing_repository_file", f"Required repository file is missing: {name}."
 				)
