@@ -10,7 +10,9 @@ SCHEMA_VERSION = 1
 PROTOCOL_VERSION = 1
 
 MAX_PACKAGE_SIZE = 10 * 1024 * 1024
-MAX_MAIN_JS_SIZE = 5 * 1024 * 1024
+MAX_EXTRACTED_SIZE = 30 * 1024 * 1024
+MAX_FILE_SIZE = 5 * 1024 * 1024
+MAX_PACKAGE_FILES = 200
 MAX_ICON_SIZE = 64 * 1024
 
 CATALOG_PAGE_SIZE = 100
@@ -25,32 +27,42 @@ SEMVER_PATTERN = re.compile(
 	r"(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$"
 )
 
-SUPPORTED_CAPABILITIES = frozenset(
+# The permissions Builder gates a bridge method by. Keep in step with
+# `PERMISSIONS` in `builder/extensions/constants.py`.
+SUPPORTED_PERMISSIONS = frozenset(
 	{
-		"context.read",
-		"block.read",
-		"block.update",
-		"block.insert",
-		"page.read",
+		"page.edit",
 		"page.write",
 		"token.write",
-		"ui.dialog",
-		"ui.popover",
 		"data.access",
 		"schema.write",
+		"method.call",
 	}
 )
 
+# The files Builder serves to an extension frame. Keep in step with
+# `ASSET_TYPES` in `builder/extensions/constants.py`. No HTML or XML.
 ALLOWED_SUFFIXES = frozenset(
 	{
 		".js",
+		".css",
 		".json",
 		".svg",
+		".png",
+		".jpg",
+		".jpeg",
+		".gif",
+		".webp",
+		".woff",
+		".woff2",
 	}
 )
 
+# Build output folders beside the root files. The entry imports these by relative path.
+PACKAGE_FOLDERS = frozenset({"chunks", "assets"})
+
 MANIFEST_V1_REQUIRED_FIELDS = frozenset(
-	{"v", "name", "label", "description", "version", "entry", "capabilities"}
+	{"v", "name", "label", "description", "version", "entry", "permissions"}
 )
 MANIFEST_V1_OPTIONAL_FIELDS = frozenset({"icon"})
 MANIFEST_V1_FIELDS = MANIFEST_V1_REQUIRED_FIELDS | MANIFEST_V1_OPTIONAL_FIELDS
@@ -76,7 +88,7 @@ def validate_manifest(manifest: object) -> dict:
 	_validate_manifest_fields(manifest)
 	_validate_manifest_identity(manifest)
 	_validate_manifest_icon(manifest.get("icon"))
-	_validate_capabilities(manifest["capabilities"])
+	_validate_permissions(manifest["permissions"])
 	return manifest
 
 
@@ -122,19 +134,19 @@ def _validate_manifest_icon(icon: object) -> None:
 		raise ProtocolValidationError("invalid_icon", "Manifest icon must name one root SVG file.")
 
 
-def _validate_capabilities(capabilities: object) -> None:
-	if not isinstance(capabilities, list) or any(not isinstance(item, str) for item in capabilities):
+def _validate_permissions(permissions: object) -> None:
+	if not isinstance(permissions, list) or any(not isinstance(item, str) for item in permissions):
 		raise ProtocolValidationError(
-			"invalid_capabilities", "Manifest capabilities must be a list of supported capability names."
+			"invalid_permissions", "Manifest permissions must be a list of supported permission names."
 		)
-	if len(capabilities) != len(set(capabilities)):
+	if len(permissions) != len(set(permissions)):
 		raise ProtocolValidationError(
-			"duplicate_capability", "Manifest capabilities must not contain duplicates."
+			"duplicate_permission", "Manifest permissions must not contain duplicates."
 		)
-	unsupported = sorted(set(capabilities) - SUPPORTED_CAPABILITIES)
+	unsupported = sorted(set(permissions) - SUPPORTED_PERMISSIONS)
 	if unsupported:
 		raise ProtocolValidationError(
-			"unsupported_capability", f"Unsupported extension capability: {unsupported[0]}."
+			"unsupported_permission", f"Unsupported extension permission: {unsupported[0]}."
 		)
 
 

@@ -27,7 +27,7 @@ def manifest(**changes):
 		"version": "1.2.0",
 		"entry": "main.js",
 		"icon": "icon.svg",
-		"capabilities": ["context.read", "block.update"],
+		"permissions": ["page.edit", "token.write"],
 	}
 	value.update(changes)
 	return value
@@ -38,7 +38,7 @@ class ProtocolTests(unittest.TestCase):
 		self.assertEqual(validate_manifest(manifest()), manifest())
 
 	def test_rejects_every_missing_required_field(self):
-		for fieldname in ("v", "name", "label", "description", "version", "entry", "capabilities"):
+		for fieldname in ("v", "name", "label", "description", "version", "entry", "permissions"):
 			value = manifest()
 			del value[fieldname]
 			with (
@@ -47,19 +47,25 @@ class ProtocolTests(unittest.TestCase):
 			):
 				validate_manifest(value)
 
-	def test_rejects_unknown_network_field_and_capability(self):
+	def test_rejects_unknown_network_field_and_permission(self):
 		with self.assertRaisesRegex(ProtocolValidationError, "network"):
 			validate_manifest(manifest(network={"access": True}))
 		with self.assertRaisesRegex(ProtocolValidationError, "Unsupported"):
-			validate_manifest(manifest(capabilities=["network.access"]))
+			validate_manifest(manifest(permissions=["network.access"]))
 
-	def test_rejects_wrong_identity_entry_icon_and_duplicate_capability(self):
+	def test_rejects_the_old_capabilities_field(self):
+		value = manifest(capabilities=["page.edit"])
+		del value["permissions"]
+		with self.assertRaisesRegex(ProtocolValidationError, "permissions"):
+			validate_manifest(value)
+
+	def test_rejects_wrong_identity_entry_icon_and_duplicate_permission(self):
 		invalid = (
 			manifest(name="Acme/icons"),
 			manifest(version="v1.2.0"),
 			manifest(entry="dist/main.js"),
 			manifest(icon="assets/icon.svg"),
-			manifest(capabilities=["context.read", "context.read"]),
+			manifest(permissions=["page.edit", "page.edit"]),
 		)
 		for value in invalid:
 			with self.subTest(value=value), self.assertRaises(ProtocolValidationError):
@@ -114,13 +120,42 @@ class PackageTests(unittest.TestCase):
 			self.package({"manifest.json": json.dumps(manifest()), "main.js": "", "run.exe": "x"}),
 		)
 
-	def test_rejects_every_file_outside_the_three_file_contract(self):
+	def test_rejects_every_file_outside_the_root_files_and_build_folders(self):
 		base = {
 			"manifest.json": json.dumps(manifest(icon=None)),
 			"main.js": "export const ready = true;",
 		}
 		self.assert_code("unexpected_file", self.package({**base, "chunk.js": "export {};"}))
-		self.assert_code("unexpected_file", self.package({**base, "assets/": ""}))
+		self.assert_code("unexpected_file", self.package({**base, "lib/chunk.js": "export {};"}))
+
+	def test_accepts_a_chunked_package_with_folder_entries(self):
+		files = {
+			"manifest.json": json.dumps(manifest(icon=None)),
+			"main.js": 'const panel = () => import("./chunks/panel-1a2b.js");\n'
+			'const logo = new URL("./assets/logo-3c4d.svg", import.meta.url);',
+			"chunks/": "",
+			"chunks/panel-1a2b.js": 'import { sdk } from "../main.js";\nimport "frappe-builder-extension-sdk";',
+			"assets/": "",
+			"assets/main-5e6f.css": ".panel { color: red; }",
+			"assets/logo-3c4d.svg": '<svg xmlns="http://www.w3.org/2000/svg"/>',
+			"assets/font-7a8b.woff2": b"\x00\x01",
+		}
+		result = validate_package(self.package(files), expected_name="acme/icons", expected_version="1.2.0")
+		self.assertIsNone(result.icon_content)
+
+	def test_rejects_a_suffix_that_builder_does_not_serve(self):
+		base = {"manifest.json": json.dumps(manifest(icon=None)), "main.js": ""}
+		for name in ("assets/page.html", "assets/feed.xml", "chunks/tool.wasm"):
+			with self.subTest(name=name):
+				self.assert_code("unsupported_file", self.package({**base, name: "x"}))
+
+	def test_rejects_an_unsafe_svg_in_assets(self):
+		files = {
+			"manifest.json": json.dumps(manifest(icon=None)),
+			"main.js": "",
+			"assets/logo.svg": '<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>',
+		}
+		self.assert_code("unsafe_svg", self.package(files))
 
 	def test_rejects_traversal_absolute_windows_and_null_paths(self):
 		base = {"manifest.json": json.dumps(manifest(icon=None)), "main.js": ""}
@@ -160,23 +195,28 @@ class PackageTests(unittest.TestCase):
 			self.package({"manifest.json": json.dumps(manifest(version="2.0.0", icon=None)), "main.js": ""}),
 		)
 
-	def test_rejects_relative_imports(self):
+	def test_rejects_a_relative_import_of_a_missing_file(self):
 		base_manifest = json.dumps(manifest(icon=None))
-		self.assert_code(
-			"relative_import",
-			self.package({"manifest.json": base_manifest, "main.js": 'import "../escape.js";'}),
-		)
-		self.assert_code(
-			"relative_import",
-			self.package({"manifest.json": base_manifest, "main.js": 'import "./missing.js";'}),
-		)
+		sources = {
+			"main.js": 'import "../escape.js";',
+			"chunks/a.js": 'import "./missing.js";',
+			"chunks/b.js": 'const url = new URL("../assets/missing.png", import.meta.url);',
+		}
+		for name, source in sources.items():
+			files = {"manifest.json": base_manifest, "main.js": "", name: source}
+			with self.subTest(name=name):
+				self.assert_code("missing_import", self.package(files))
 
-	def test_enforces_compressed_source_and_icon_size_limits(self):
+	def test_enforces_package_file_and_icon_size_limits(self):
 		path = self.package()
 		with patch("builder_hub.extensions.package.MAX_PACKAGE_SIZE", 1):
 			self.assert_code("package_too_large", path)
-		with patch("builder_hub.extensions.package.MAX_MAIN_JS_SIZE", 4):
-			self.assert_code("source_too_large", path)
+		with patch("builder_hub.extensions.package.MAX_FILE_SIZE", 4):
+			self.assert_code("file_too_large", path)
+		with patch("builder_hub.extensions.package.MAX_EXTRACTED_SIZE", 64):
+			self.assert_code("package_too_large", path)
+		with patch("builder_hub.extensions.package.MAX_PACKAGE_FILES", 2):
+			self.assert_code("too_many_files", path)
 		with patch("builder_hub.extensions.package.MAX_ICON_SIZE", 4):
 			self.assert_code("unsafe_svg", path)
 

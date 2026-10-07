@@ -71,7 +71,7 @@ class PublishingTests(IntegrationTestCase):
 			"description": "Imported icon package.",
 			"version": version,
 			"entry": "main.js",
-			"capabilities": ["context.read"],
+			"permissions": ["page.edit"],
 		}
 		value.update(changes)
 		return value
@@ -146,9 +146,7 @@ class PublishingTests(IntegrationTestCase):
 			first.release_notes,
 			"Notes <script>bad()</script> [bad](javascript:alert(1))",
 		)
-		self.assertEqual(
-			frappe.db.get_value("Hub Extension", self.extension_name, "label"), "Imported icons"
-		)
+		self.assertEqual(frappe.db.get_value("Hub Extension", self.extension_name, "label"), "Imported icons")
 		self.assertEqual(
 			frappe.db.get_value("Hub Extension", self.extension_name, "description"),
 			"Imported icon package.",

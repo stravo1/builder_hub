@@ -62,7 +62,7 @@ class PublicationRequestTests(IntegrationTestCase):
 			"description": "Insert public icons.",
 			"version": "1.0.0",
 			"entry": "main.js",
-			"capabilities": ["block.update"],
+			"permissions": ["page.edit"],
 		}
 		self.package = Path(self.temporary.name) / "extension.builderext"
 		with zipfile.ZipFile(self.package, "w", zipfile.ZIP_DEFLATED) as archive:
@@ -108,12 +108,8 @@ class PublicationRequestTests(IntegrationTestCase):
 		approved = approve_publication_request(request.name, client=self.client)
 		self.assertEqual(approved["status"], "Published")
 		self.assertEqual(frappe.db.get_value("Hub Publisher", self.publisher_id, "status"), "Active")
-		self.assertEqual(
-			frappe.db.get_value("Hub Extension", self.extension_name, "status"), "Published"
-		)
-		self.assertEqual(
-			frappe.db.get_value("Hub Publication Request", request.name, "status"), "Approved"
-		)
+		self.assertEqual(frappe.db.get_value("Hub Extension", self.extension_name, "status"), "Published")
+		self.assertEqual(frappe.db.get_value("Hub Publication Request", request.name, "status"), "Approved")
 		catalog = api.get_catalog(1)
 		self.assertIn(self.extension_name, [item["name"] for item in catalog["extensions"]])
 
@@ -121,7 +117,9 @@ class PublicationRequestTests(IntegrationTestCase):
 		self.client.files["DESCRIPTION.md"] = b"Pick an icon."
 		frappe.set_user("Guest")
 		result = request_publication(self.repository_url, client=self.client)
-		self.assertEqual(frappe.db.get_value("Hub Publication Request", result["request"], "readme"), "Pick an icon.")
+		self.assertEqual(
+			frappe.db.get_value("Hub Publication Request", result["request"], "readme"), "Pick an icon."
+		)
 
 	def test_github_failure_is_not_read_as_a_missing_description(self):
 		self.client.files["DESCRIPTION.md"] = ProtocolValidationError(
