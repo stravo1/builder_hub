@@ -1,0 +1,13 @@
+{
+ "creation": "2026-10-14 12:36:27.442730",
+ "docstatus": 0,
+ "doctype": "Builder Client Script",
+ "idx": 0,
+ "modified": "2026-10-14 12:36:27.442730",
+ "modified_by": "Administrator",
+ "name": "extensions_submit_styles",
+ "owner": "Administrator",
+ "public_url": "/files/page_styles/extensions_submit_styles-6afe14fb76.css?v=8d0f739601",
+ "script": "[data-publication-form] input::placeholder { color: #999999; }\n",
+ "script_type": "CSS"
+}
