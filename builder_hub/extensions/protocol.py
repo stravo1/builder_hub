@@ -61,10 +61,10 @@ ALLOWED_SUFFIXES = frozenset(
 # Build output folders beside the root files. The entry imports these by relative path.
 PACKAGE_FOLDERS = frozenset({"chunks", "assets"})
 
-MANIFEST_V1_REQUIRED_FIELDS = frozenset(
-	{"v", "name", "label", "description", "version", "entry", "permissions"}
-)
-MANIFEST_V1_OPTIONAL_FIELDS = frozenset({"icon"})
+MANIFEST_V1_REQUIRED_FIELDS = frozenset({"v", "name", "label", "description", "version", "entry"})
+# A trusted extension runs with the access of the user who opens the editor, so
+# its manifest names no permissions
+MANIFEST_V1_OPTIONAL_FIELDS = frozenset({"icon", "permissions"})
 MANIFEST_V1_FIELDS = MANIFEST_V1_REQUIRED_FIELDS | MANIFEST_V1_OPTIONAL_FIELDS
 
 
@@ -88,7 +88,8 @@ def validate_manifest(manifest: object) -> dict:
 	_validate_manifest_fields(manifest)
 	_validate_manifest_identity(manifest)
 	_validate_manifest_icon(manifest.get("icon"))
-	_validate_permissions(manifest["permissions"])
+	if "permissions" in manifest:
+		_validate_permissions(manifest["permissions"])
 	return manifest
 
 

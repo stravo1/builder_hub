@@ -37,8 +37,13 @@ class ProtocolTests(unittest.TestCase):
 	def test_accepts_exact_v1_manifest(self):
 		self.assertEqual(validate_manifest(manifest()), manifest())
 
+	def test_accepts_a_manifest_with_no_permissions(self):
+		value = manifest()
+		del value["permissions"]
+		self.assertEqual(validate_manifest(value), value)
+
 	def test_rejects_every_missing_required_field(self):
-		for fieldname in ("v", "name", "label", "description", "version", "entry", "permissions"):
+		for fieldname in ("v", "name", "label", "description", "version", "entry"):
 			value = manifest()
 			del value[fieldname]
 			with (
@@ -56,7 +61,7 @@ class ProtocolTests(unittest.TestCase):
 	def test_rejects_the_old_capabilities_field(self):
 		value = manifest(capabilities=["page.edit"])
 		del value["permissions"]
-		with self.assertRaisesRegex(ProtocolValidationError, "permissions"):
+		with self.assertRaisesRegex(ProtocolValidationError, "capabilities"):
 			validate_manifest(value)
 
 	def test_rejects_wrong_identity_entry_icon_and_duplicate_permission(self):
